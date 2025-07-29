@@ -18,7 +18,7 @@ public class Program
             {
                 Border = BoxBorder.Rounded,
                 Padding = new Padding(1, 1, 1, 1),
-                BorderStyle = new Style(Color.Wheat1),
+                BorderStyle = new Style(Color.Aqua),
                 Expand = true
             };
 

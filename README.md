@@ -10,7 +10,7 @@ A modern, high-performance file navigator for your terminal. Built with .NET and
 
 Watch Termix in action:
 
-https://github.com/user-attachments/assets/d4af091c-3941-481a-ada6-10eb6f73e3c2
+https://github.com/user-attachments/assets/c5d1dcb3-6428-441f-a807-6367a464adee
 
 ---
 

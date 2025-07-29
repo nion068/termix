@@ -5,14 +5,15 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>termix</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageId>Termix</PackageId>
-    <Version>0.0.6</Version>
+    <Version>0.0.8</Version>
     <Authors>amrohan</Authors>
     <Company>amrohan</Company>
-    <Description>About Termix is a modern, high-performance file manager built for your terminal.
-      Powered by .NET and Spectre.Console, it brings a smooth, flicker-free, and visually rich
-      navigation experience right to the command line.</Description>
+    <Description>An elegant and powerful file navigator that makes command-line file management
+      fast, intuitive, and visually enjoyable. </Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/amrohan/termix</RepositoryUrl>

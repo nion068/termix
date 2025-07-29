@@ -7,14 +7,24 @@
     <Nullable>enable</Nullable>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageId>Termix</PackageId>
-    <Version>0.0.5</Version>
+    <Version>0.0.6</Version>
     <Authors>amrohan</Authors>
+    <Company>amrohan</Company>
+    <Description>About Termix is a modern, high-performance file manager built for your terminal.
+      Powered by .NET and Spectre.Console, it brings a smooth, flicker-free, and visually rich
+      navigation experience right to the command line.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/amrohan/termix</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>terminal console cli command-line tools</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.50.0" />
-    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

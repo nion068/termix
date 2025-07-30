@@ -1,3 +1,7 @@
+using termix.models;
+
+namespace termix.Services;
+
 public class IconProvider
 {
     private readonly Dictionary<string, string> _extensionIcons = new()

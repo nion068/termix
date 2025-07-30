@@ -1,6 +1,8 @@
 ﻿using Spectre.Console;
 
-public class Program
+namespace termix;
+
+public static class Program
 {
     public static async Task Main(string[] args)
     {

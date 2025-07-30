@@ -1,3 +1,5 @@
+namespace termix.models;
+
 public record FileSystemItem(
     string Path,
     string Name,
@@ -13,7 +15,7 @@ public record FileSystemItem(
     {
         if (bytes == 0) return "0 B";
         string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
-        int counter = 0;
+        var counter = 0;
         double number = bytes;
         while (Math.Round(number / 1024) >= 1 && counter < suffixes.Length - 1)
         {

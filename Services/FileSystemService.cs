@@ -1,8 +1,12 @@
-using Spectre.Console;
 using System.Diagnostics;
+using Spectre.Console;
+using termix.models;
+
+namespace termix.Services;
+
 public class FileSystemService
 {
-    public List<FileSystemItem> GetDirectoryContents(string path)
+    public static List<FileSystemItem> GetDirectoryContents(string path)
     {
         var items = new List<FileSystemItem>();
         var directoryInfo = new DirectoryInfo(path);

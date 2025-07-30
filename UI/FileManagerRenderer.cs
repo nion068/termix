@@ -1,5 +1,10 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
+using termix.models;
+using termix.Services;
+
+namespace termix.UI;
+
 public class FileManagerRenderer(IconProvider iconProvider)
 {
     public void Render(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
@@ -18,7 +23,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
         AnsiConsole.Write(layout);
     }
 
-    private Panel CreateHeader(string currentPath)
+    private static Panel CreateHeader(string currentPath)
     {
         var displayPath = currentPath.Length > 80 ? "..." + currentPath[^77..] : currentPath;
         var headerContent = new Markup($"[bold cyan3]\uE5FF {displayPath.EscapeMarkup()}[/]");
@@ -43,20 +48,20 @@ public class FileManagerRenderer(IconProvider iconProvider)
 
         table.AddColumn(new TableColumn("").Width(1));
 
-        if (!items.Any())
+        if (items.Count == 0)
         {
             table.AddRow(new Markup("[grey]-- Empty --[/]"), new Markup(""), new Markup(""), new Markup(""));
             return table;
         }
 
-        int pageSize = Console.WindowHeight - 12;
+        var pageSize = Console.WindowHeight - 12;
         pageSize = Math.Max(5, pageSize);
         var visibleItems = items.Skip(viewOffset).Take(pageSize).ToList();
 
 
-        bool canScrollUp = viewOffset > 0;
-        bool canScrollDown = viewOffset + pageSize < items.Count;
-        int thumbPosition = -1;
+        var canScrollUp = viewOffset > 0;
+        var canScrollDown = viewOffset + pageSize < items.Count;
+        var thumbPosition = -1;
 
 
         if (items.Count > pageSize)
@@ -65,7 +70,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
             thumbPosition = (int)Math.Floor((double)selectedIndex / (items.Count - 1) * (visibleItems.Count - 1));
         }
 
-        for (int i = 0; i < visibleItems.Count; i++)
+        for (var i = 0; i < visibleItems.Count; i++)
         {
             var item = visibleItems[i];
             var originalIndex = i + viewOffset;
@@ -74,7 +79,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
             var name = CreateNameMarkup(item);
 
 
-            string scrollChar = " ";
+            var scrollChar = " ";
             if (items.Count > pageSize)
             {
                 if (i == 0 && canScrollUp) scrollChar = "⬆";
@@ -98,13 +103,13 @@ public class FileManagerRenderer(IconProvider iconProvider)
 
     private string CreateNameMarkup(FileSystemItem item)
     {
-        string icon = iconProvider.GetIcon(item);
-        string name = item.Name.EscapeMarkup();
-        string nameStyle = item.IsDirectory ? "bold" : "";
+        var icon = iconProvider.GetIcon(item);
+        var name = item.Name.EscapeMarkup();
+        var nameStyle = item.IsDirectory ? "bold" : "";
         return $"{icon}  [{nameStyle}]{name}[/]";
     }
 
-    private Panel CreateFooter()
+    private static Panel CreateFooter()
     {
         var instructions = new Markup(
             "[grey]Use[/] [cyan]↑↓/JK[/] [grey]to move[/] | [cyan]Enter[/] [grey]to open[/] | [cyan]Backspace[/] [grey]for parent[/] | [cyan]Q[/] [grey]to quit[/]"

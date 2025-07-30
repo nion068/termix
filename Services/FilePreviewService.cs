@@ -1,6 +1,8 @@
+using System.Text;
 using Spectre.Console;
 using Spectre.Console.Rendering;
-using System.Text;
+
+namespace termix.Services;
 
 public class FilePreviewService
 {
@@ -21,15 +23,15 @@ public class FilePreviewService
 
         try
         {
-            byte[] fileBytes = File.ReadAllBytes(filePath);
+            var fileBytes = File.ReadAllBytes(filePath);
             if (IsBinary(fileBytes))
             {
                 content = Align.Center(new Text("Binary File\nNo preview available"), VerticalAlignment.Middle);
                 return new Panel(content).Header(header).Expand().Border(BoxBorder.Rounded);
             }
 
-            int previewHeight = Console.WindowHeight - 12;
-            string[] allLines = File.ReadAllLines(filePath, Encoding.UTF8);
+            var previewHeight = Console.WindowHeight - 12;
+            var allLines = File.ReadAllLines(filePath, Encoding.UTF8);
 
             var visibleLines = allLines
                 .Skip(verticalOffset)
@@ -37,7 +39,7 @@ public class FilePreviewService
                 .Select(line => line.Length > horizontalOffset ? line.Substring(horizontalOffset) : "")
                 .ToArray();
 
-            if (!visibleLines.Any())
+            if (visibleLines.Length == 0)
             {
                 content = Align.Center(new Text("[grey]-- End of File --[/]"), VerticalAlignment.Middle);
             }
@@ -45,25 +47,13 @@ public class FilePreviewService
             {
                 var processedContent = string.Join("\n", visibleLines);
 
-                switch (extension)
+                content = extension switch
                 {
-                    case ".cs": content = _highlighter.Highlight(processedContent, "csharp"); break;
-                    case ".py": content = _highlighter.Highlight(processedContent, "python"); break;
-                    case ".js": content = _highlighter.Highlight(processedContent, "javascript"); break;
-                    case ".md":
-                    case ".txt":
-                    case ".log":
-                    case ".json":
-                    case ".xml":
-                    case ".html":
-                    case ".css":
-                        content = new Text(processedContent.EscapeMarkup());
-                        break;
-                    default:
-
-                        content = new Text(processedContent.EscapeMarkup());
-                        break;
-                }
+                    ".cs" => _highlighter.Highlight(processedContent, "csharp"),
+                    ".py" => _highlighter.Highlight(processedContent, "python"),
+                    ".js" => _highlighter.Highlight(processedContent, "javascript"), 
+                    _ => new Text(processedContent.EscapeMarkup())
+                };
             }
         }
         catch (IOException ex)
@@ -74,16 +64,21 @@ public class FilePreviewService
         return new Panel(content).Header(header).Expand().Border(BoxBorder.Rounded);
     }
 
-    private bool IsBinary(byte[] fileBytes)
+    private static bool IsBinary(byte[] fileBytes)
     {
         const int sampleSize = 8000;
-        int length = Math.Min(sampleSize, fileBytes.Length);
+        var length = Math.Min(sampleSize, fileBytes.Length);
 
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
         {
-            byte b = fileBytes[i];
-            if (b == 0) return true;
-            if (b < 7 || (b > 14 && b < 32)) return true;
+            var b = fileBytes[i];
+            switch (b)
+            {
+                case 0:
+                case < 7:
+                case > 14 and < 32:
+                    return true;
+            }
         }
 
         return false;

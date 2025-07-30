@@ -1,6 +1,8 @@
-using Spectre.Console;
 using System.Text;
 using System.Text.RegularExpressions;
+using Spectre.Console;
+
+namespace termix.Services;
 
 public record LanguageTheme
 {
@@ -19,7 +21,7 @@ public class CustomSyntaxHighlighter
     {
         _themes["csharp"] = new LanguageTheme
         {
-            Keywords = new()
+            Keywords = new Dictionary<string, Style>
             {
                 ["public"] = new(Color.Blue),
                 ["private"] = new(Color.Blue),
@@ -41,12 +43,12 @@ public class CustomSyntaxHighlighter
                 ["get"] = new(Color.DarkCyan),
                 ["set"] = new(Color.DarkCyan)
             },
-            TypeStyle = new(Color.Teal)
+            TypeStyle = new Style(Color.Teal)
         };
 
         _themes["python"] = new LanguageTheme
         {
-            Keywords = new()
+            Keywords = new Dictionary<string, Style>
             {
                 ["def"] = new(Color.Blue),
                 ["class"] = new(Color.Blue),
@@ -62,12 +64,12 @@ public class CustomSyntaxHighlighter
                 ["or"] = new(Color.Orange1)
             },
             CommentStyle = new Style(Color.Green, decoration: Decoration.Italic),
-            TypeStyle = new(Color.Teal)
+            TypeStyle = new Style(Color.Teal)
         };
 
         _themes["javascript"] = new LanguageTheme
         {
-            Keywords = new()
+            Keywords = new Dictionary<string, Style>
             {
                 ["function"] = new(Color.Blue),
                 ["class"] = new(Color.Blue),

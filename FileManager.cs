@@ -1,5 +1,10 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
+using termix.models;
+using termix.Services;
+using termix.UI;
+
+namespace termix;
 
 public class FileManager
 {
@@ -10,12 +15,12 @@ public class FileManager
     private readonly DoubleBufferedRenderer _doubleBuffer = new();
 
     private string _currentPath = Directory.GetCurrentDirectory();
-    private int _selectedIndex = 0;
+    private int _selectedIndex;
     private List<FileSystemItem> _currentItems = [];
     private IRenderable _currentPreview = new Text("");
-    private int _viewOffset = 0;
-    private int _previewVerticalOffset = 0;
-    private int _previewHorizontalOffset = 0;
+    private int _viewOffset ;
+    private int _previewVerticalOffset ;
+    private int _previewHorizontalOffset ;
 
     public void Run()
     {
@@ -36,8 +41,8 @@ public class FileManager
 
     private bool HandleKeyPress(ConsoleKeyInfo keyInfo)
     {
-        bool selectionChanged = false;
-        bool previewNeedsUpdate = false;
+        var selectionChanged = false;
+        var previewNeedsUpdate = false;
 
         switch (keyInfo.Key)
         {
@@ -61,7 +66,6 @@ public class FileManager
                 _previewHorizontalOffset += 5;
                 previewNeedsUpdate = true;
                 break;
-
             case ConsoleKey.DownArrow or ConsoleKey.J:
                 selectionChanged = MoveSelection(1);
                 break;
@@ -166,8 +170,8 @@ public class FileManager
     {
         try
         {
-            _currentItems = _fileSystemService.GetDirectoryContents(_currentPath);
-            _selectedIndex = _currentItems.Any() ? 0 : -1;
+            _currentItems = FileSystemService.GetDirectoryContents(_currentPath);
+            _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
         }
         catch (Exception ex)
         {

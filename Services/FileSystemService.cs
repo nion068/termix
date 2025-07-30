@@ -4,7 +4,7 @@ using termix.models;
 
 namespace termix.Services;
 
-public class FileSystemService
+public abstract class FileSystemService
 {
     public static List<FileSystemItem> GetDirectoryContents(string path)
     {
@@ -32,7 +32,7 @@ public class FileSystemService
         return items;
     }
 
-    public void OpenFile(string filePath)
+    public static void OpenFile(string filePath)
     {
         try
         {

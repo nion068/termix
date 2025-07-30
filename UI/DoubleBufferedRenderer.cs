@@ -1,6 +1,8 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
+namespace termix.UI;
+
 public class DoubleBufferedRenderer
 {
     private readonly StringWriter _writer;

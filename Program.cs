@@ -6,6 +6,7 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        var useIcons = !args.Contains("--no-icons");
         try
         {
             AnsiConsole.Clear();
@@ -29,8 +30,7 @@ public static class Program
 
             await Task.Delay(1500);
 
-
-            var fileManager = new FileManager();
+            var fileManager = new FileManager(useIcons);
             fileManager.Run();
         }
         catch (Exception ex)
@@ -39,7 +39,6 @@ public static class Program
         }
         finally
         {
-
             AnsiConsole.Clear();
             AnsiConsole.Write(
                 new Panel("[bold green]Thanks for using Termix![/]\n[dim]Have a productive session 🤖[/]")

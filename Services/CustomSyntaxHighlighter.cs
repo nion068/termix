@@ -1,125 +1,196 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Spectre.Console;
-
 namespace termix.Services;
-
-public record LanguageTheme
-{
-    public Dictionary<string, Style> Keywords { get; init; } = new();
-    public Style StringStyle { get; init; } = new(Color.Yellow);
-    public Style CommentStyle { get; init; } = new(Color.Green);
-    public Style NumberStyle { get; init; } = new(Color.Magenta1);
-    public Style TypeStyle { get; init; } = new(Color.Cyan1);
-}
 
 public class CustomSyntaxHighlighter
 {
-    private readonly Dictionary<string, LanguageTheme> _themes = new();
+    private readonly Dictionary<string, models.LanguageTheme> _themes = new();
 
     public CustomSyntaxHighlighter()
     {
-        _themes["csharp"] = new LanguageTheme
+        var styleControl = new Style(Color.Plum1); 
+        var styleKeyword = new Style(Color.SkyBlue2); 
+        var styleType = new Style(Color.Teal); 
+        var styleString = new Style(Color.Gold3); 
+        var styleComment = new Style(Color.Grey58); 
+        var styleNumber = new Style(Color.Magenta2); 
+        var styleFunction = new Style(Color.LightGreen); 
+        var styleBuiltin = new Style(Color.Turquoise2); 
+
+        _themes[".cs"] = new models.LanguageTheme
         {
-            Keywords = new Dictionary<string, Style>
+            TokenStyles = new Dictionary<string, Style>
             {
-                ["public"] = new(Color.Blue),
-                ["private"] = new(Color.Blue),
-                ["protected"] = new(Color.Blue),
-                ["class"] = new(Color.Blue),
-                ["void"] = new(Color.Blue),
-                ["string"] = new(Color.Blue),
-                ["int"] = new(Color.Blue),
-                ["bool"] = new(Color.Blue),
-                ["var"] = new(Color.Blue),
-                ["if"] = new(Color.Purple),
-                ["else"] = new(Color.Purple),
-                ["for"] = new(Color.Purple),
-                ["foreach"] = new(Color.Purple),
-                ["while"] = new(Color.Purple),
-                ["return"] = new(Color.Purple),
-                ["new"] = new(Color.Purple),
-                ["using"] = new(Color.Grey),
-                ["get"] = new(Color.DarkCyan),
-                ["set"] = new(Color.DarkCyan)
+                { "string", styleString },
+                { "comment", styleComment },
+                { "number", styleNumber },
+                { "keyword", styleKeyword },
+                { "control", styleControl },
+                { "type", styleType },
+                { "function", styleFunction },
             },
-            TypeStyle = new Style(Color.Teal)
+            TokenizerRegex = BuildRegex(
+                keywords:
+                ["public", "private", "protected", "class", "void", "namespace", "using", "var", "get", "set"],
+                controls: ["if", "else", "for", "foreach", "while", "return", "new"],
+                types: ["string", "int", "bool", "double", "float", "long", "decimal"],
+                stringPatterns: [@"(\"".*?\"")"],
+                commentPatterns: [@"(//.*)"],
+                functionPattern: @"(\w+)\s*\("
+            )
         };
 
-        _themes["python"] = new LanguageTheme
+        _themes[".py"] = new models.LanguageTheme
         {
-            Keywords = new Dictionary<string, Style>
+            TokenStyles = new Dictionary<string, Style>
             {
-                ["def"] = new(Color.Blue),
-                ["class"] = new(Color.Blue),
-                ["if"] = new(Color.Purple),
-                ["else"] = new(Color.Purple),
-                ["elif"] = new(Color.Purple),
-                ["for"] = new(Color.Purple),
-                ["while"] = new(Color.Purple),
-                ["return"] = new(Color.Purple),
-                ["import"] = new(Color.Grey),
-                ["from"] = new(Color.Grey),
-                ["and"] = new(Color.Orange1),
-                ["or"] = new(Color.Orange1)
+                { "string", styleString },
+                { "comment", styleComment },
+                { "number", styleNumber },
+                { "keyword", styleKeyword },
+                { "control", styleControl },
+                { "builtin", styleBuiltin }
             },
-            CommentStyle = new Style(Color.Green, decoration: Decoration.Italic),
-            TypeStyle = new Style(Color.Teal)
+            TokenizerRegex = BuildRegex(
+                keywords: ["def", "class", "import", "from", "as", "and", "or", "not", "in", "is"],
+                controls: ["if", "else", "elif", "for", "while", "return", "try", "except", "with"],
+                builtins: ["True", "False", "None", "self"],
+                stringPatterns: [@"(\"".*?\"")", @"(\'.*?\')"],
+                commentPatterns: [@"(#.*)"]
+            )
         };
 
-        _themes["javascript"] = new LanguageTheme
+        _themes[".js"] = new models.LanguageTheme
         {
-            Keywords = new Dictionary<string, Style>
+            TokenStyles = new Dictionary<string, Style>
             {
-                ["function"] = new(Color.Blue),
-                ["class"] = new(Color.Blue),
-                ["const"] = new(Color.Blue),
-                ["let"] = new(Color.Blue),
-                ["var"] = new(Color.Blue),
-                ["if"] = new(Color.Purple),
-                ["else"] = new(Color.Purple),
-                ["for"] = new(Color.Purple),
-                ["while"] = new(Color.Purple),
-                ["return"] = new(Color.Purple),
-                ["import"] = new(Color.Grey),
-                ["from"] = new(Color.Grey),
-                ["export"] = new(Color.Grey)
+                { "string", styleString },
+                { "comment", styleComment },
+                { "number", styleNumber },
+                { "keyword", styleKeyword },
+                { "control", styleControl },
+                { "function", styleFunction },
+                { "builtin", styleBuiltin }
             },
-            TypeStyle = new(Color.Teal)
+            TokenizerRegex = BuildRegex(
+                keywords: ["const", "let", "var", "function", "class", "import", "from", "export", "async", "await"],
+                controls: ["if", "else", "for", "while", "return", "new", "switch", "case"],
+                builtins: ["true", "false", "null", "undefined", "this"],
+                stringPatterns: [@"(\"".*?\"")", @"(\'.*?\')", @"(\`.*?\`)"],
+                commentPatterns: [@"(//.*)", @"(/\*[\s\S]*?\*/)"],
+                functionPattern: @"(\w+)\s*\("
+            )
+        };
+
+        _themes[".ts"] = new models.LanguageTheme
+        {
+            TokenStyles = _themes[".js"].TokenStyles, 
+            TokenizerRegex = BuildRegex(
+                keywords:
+                [
+                    "const", "let", "var", "function", "class", "import", "from", "export", "async", "await", "public",
+                    "private", "protected", "readonly", "interface", "type", "enum", "implements", "extends"
+                ],
+                controls: ["if", "else", "for", "while", "return", "new", "switch", "case"],
+                types: ["string", "number", "boolean", "any", "void", "unknown", "never"],
+                builtins: ["true", "false", "null", "undefined", "this"],
+                stringPatterns: [@"(\"".*?\"")", @"(\'.*?\')", @"(\`.*?\`)"],
+                commentPatterns: [@"(//.*)", @"(/\*[\s\S]*?\*/)"],
+                functionPattern: @"(\w+)\s*\("
+            )
         };
     }
 
-    public Markup Highlight(string code, string language)
+    private static Regex BuildRegex(
+        IEnumerable<string>? stringPatterns = null,
+        IEnumerable<string>? commentPatterns = null,
+        IEnumerable<string>? keywords = null,
+        IEnumerable<string>? controls = null,
+        IEnumerable<string>? types = null,
+        IEnumerable<string>? builtins = null,
+        string? functionPattern = null)
     {
-        if (!_themes.TryGetValue(language, out var theme))
+        var pattern = new StringBuilder();
+
+        if (commentPatterns != null)
+            AppendPattern(pattern, string.Join('|', commentPatterns.Select(p => $"(?<comment>{p})")));
+        if (stringPatterns != null)
+            AppendPattern(pattern, string.Join('|', stringPatterns.Select(p => $"(?<string>{p})")));
+        if (functionPattern != null) AppendPattern(pattern, $"(?<function>{functionPattern})");
+        if (keywords != null) AppendPattern(pattern, $@"\b(?<keyword>({string.Join('|', keywords)}))\b");
+        if (controls != null) AppendPattern(pattern, $@"\b(?<control>({string.Join('|', controls)}))\b");
+        if (types != null) AppendPattern(pattern, $@"\b(?<type>({string.Join('|', types)}))\b");
+        if (builtins != null) AppendPattern(pattern, $@"\b(?<builtin>({string.Join('|', builtins)}))\b");
+
+        AppendPattern(pattern, @"\b(?<number>\d+[\.\d_]*)\b");
+        AppendPattern(pattern, @"\b(?<type>[A-Z][a-zA-Z0-9_]*)\b");
+
+        return new Regex(pattern.ToString(), RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+    }
+
+    private static void AppendPattern(StringBuilder sb, string pattern)
+    {
+        if (sb.Length > 0) sb.Append('|');
+        sb.Append(pattern);
+    }
+
+    public Markup Highlight(string code, string languageExtension)
+    {
+        var langKey = languageExtension.ToLowerInvariant(); 
+        if (string.IsNullOrEmpty(langKey) || !_themes.TryGetValue(langKey, out var theme))
         {
             return new Markup(code.EscapeMarkup());
         }
 
         var sb = new StringBuilder();
-        var lines = code.Split('\n');
 
-        foreach (var line in lines)
+        foreach (var line in code.Split('\n'))
         {
-            var processedLine = line.EscapeMarkup();
+            var lastIndex = 0;
+            var matches = theme.TokenizerRegex.Matches(line);
 
-            processedLine = Regex.Replace(processedLine, "(\\\".*?\\\")", m => $"[{theme.StringStyle.ToMarkup()}]{m.Value}[/]");
-
-            processedLine = Regex.Replace(processedLine, "(//.*)", m => $"[{theme.CommentStyle.ToMarkup()}]{m.Value}[/]");
-
-            processedLine = Regex.Replace(processedLine, @"\b\d+\b", m => $"[{theme.NumberStyle.ToMarkup()}]{m.Value}[/]");
-
-            var keywordRegex = new Regex(@"\b(" + string.Join("|", theme.Keywords.Keys) + @")\b");
-            processedLine = keywordRegex.Replace(processedLine, m =>
+            foreach (Match match in matches)
             {
-                var keyword = m.Value;
-                var style = theme.Keywords[keyword];
-                return $"[{style.ToMarkup()}]{keyword}[/]";
-            });
+                if (match.Index > lastIndex)
+                {
+                    sb.Append(line.Substring(lastIndex, match.Index - lastIndex).EscapeMarkup());
+                }
 
-            processedLine = Regex.Replace(processedLine, @"\b([A-Z][a-zA-Z0-9_]*)\b", m => $"[{theme.TypeStyle.ToMarkup()}]{m.Value}[/]");
+                var groupName = theme.TokenizerRegex.GetGroupNames()
+                    .Skip(1)
+                    .FirstOrDefault(g => match.Groups[g].Success);
 
-            sb.AppendLine(processedLine);
+                if (groupName != null && theme.TokenStyles.TryGetValue(groupName, out var style))
+                {
+                    var valueToStyle = match.Value;
+
+                    if (groupName == "function")
+                    {
+                        valueToStyle = match.Groups[1].Value;
+                    }
+
+                    sb.Append($"[{style.ToMarkup()}]{valueToStyle.EscapeMarkup()}[/]");
+
+                    if (groupName == "function")
+                    {
+                        sb.Append('(');
+                    }
+                }
+                else
+                {
+                    sb.Append(match.Value.EscapeMarkup());
+                }
+
+                lastIndex = match.Index + match.Length;
+            }
+
+            if (lastIndex < line.Length)
+            {
+                sb.Append(line[lastIndex..].EscapeMarkup());
+            }
+
+            sb.AppendLine();
         }
 
         return new Markup(sb.ToString());

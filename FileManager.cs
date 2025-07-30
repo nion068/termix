@@ -8,19 +8,23 @@ namespace termix;
 
 public class FileManager
 {
-    private readonly FileSystemService _fileSystemService = new();
     private readonly FilePreviewService _filePreviewService = new();
-    private readonly FileManagerRenderer _renderer = new(new IconProvider());
-
+    private readonly FileManagerRenderer _renderer;
     private readonly DoubleBufferedRenderer _doubleBuffer = new();
 
     private string _currentPath = Directory.GetCurrentDirectory();
     private int _selectedIndex;
     private List<FileSystemItem> _currentItems = [];
     private IRenderable _currentPreview = new Text("");
-    private int _viewOffset ;
-    private int _previewVerticalOffset ;
-    private int _previewHorizontalOffset ;
+    private int _viewOffset;
+    private int _previewVerticalOffset;
+    private int _previewHorizontalOffset;
+
+    public FileManager(bool useIcons)
+    {
+        var iconProvider = new IconProvider(useIcons);
+        _renderer = new FileManagerRenderer(iconProvider);
+    }
 
     public void Run()
     {
@@ -36,8 +40,6 @@ public class FileManager
             if (!HandleKeyPress(keyInfo)) break;
         }
     }
-
-
 
     private bool HandleKeyPress(ConsoleKeyInfo keyInfo)
     {
@@ -139,7 +141,7 @@ public class FileManager
         if (_currentItems.Count == 0) return;
         var selectedItem = _currentItems[_selectedIndex];
         if (selectedItem.IsDirectory) NavigateToDirectory(selectedItem.Path);
-        else _fileSystemService.OpenFile(selectedItem.Path);
+        else FileSystemService.OpenFile(selectedItem.Path);
     }
 
     private void NavigateToDirectory(string path)
@@ -147,17 +149,15 @@ public class FileManager
         try
         {
             var fullPath = Path.GetFullPath(path);
-            if (Directory.Exists(fullPath))
-            {
-                _currentPath = fullPath;
-                _viewOffset = 0;
-                _selectedIndex = 0;
-                LoadCurrentDirectory();
-                AdjustViewPort();
-                UpdatePreview();
-            }
+            if (!Directory.Exists(fullPath)) return;
+            _currentPath = fullPath;
+            _viewOffset = 0;
+            _selectedIndex = 0;
+            LoadCurrentDirectory();
+            AdjustViewPort();
+            UpdatePreview();
         }
-        catch (Exception ex) { AnsiConsole.Clear(); AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]"); Console.ReadKey(); }
+        catch (Exception ex) { FileManagerRenderer.ShowError(ex.Message); }
     }
 
     private void NavigateUp()
@@ -171,11 +171,11 @@ public class FileManager
         try
         {
             _currentItems = FileSystemService.GetDirectoryContents(_currentPath);
-            _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
+            _selectedIndex = _currentItems.Count > 0 ? 0 : -1;
         }
         catch (Exception ex)
         {
-            AnsiConsole.Clear(); AnsiConsole.MarkupLine($"[red]Error: {ex.Message}[/]"); Console.ReadKey();
+            FileManagerRenderer.ShowError(ex.Message);
             _currentItems = [];
             _selectedIndex = -1;
         }

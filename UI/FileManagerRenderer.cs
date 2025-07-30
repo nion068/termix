@@ -7,20 +7,18 @@ namespace termix.UI;
 
 public class FileManagerRenderer(IconProvider iconProvider)
 {
-    public void Render(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
+    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
     {
-        Console.Clear();
         var header = CreateHeader(currentPath);
         var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
         var footer = CreateFooter();
 
-        var layout = new Layout("Root")
+        return new Layout("Root")
             .SplitRows(
                 new Layout("Header").Update(header).Size(3),
                 new Layout("Body").Update(body),
                 new Layout("Footer").Update(footer).Size(3)
             );
-        AnsiConsole.Write(layout);
     }
 
     private static Panel CreateHeader(string currentPath)
@@ -45,30 +43,11 @@ public class FileManagerRenderer(IconProvider iconProvider)
         table.AddColumn("Name");
         table.AddColumn(new TableColumn("Size").RightAligned());
         table.AddColumn(new TableColumn("Modified").RightAligned());
-
         table.AddColumn(new TableColumn("").Width(1));
-
-        if (items.Count == 0)
-        {
-            table.AddRow(new Markup("[grey]-- Empty --[/]"), new Markup(""), new Markup(""), new Markup(""));
-            return table;
-        }
 
         var pageSize = Console.WindowHeight - 12;
         pageSize = Math.Max(5, pageSize);
         var visibleItems = items.Skip(viewOffset).Take(pageSize).ToList();
-
-
-        var canScrollUp = viewOffset > 0;
-        var canScrollDown = viewOffset + pageSize < items.Count;
-        var thumbPosition = -1;
-
-
-        if (items.Count > pageSize)
-        {
-
-            thumbPosition = (int)Math.Floor((double)selectedIndex / (items.Count - 1) * (visibleItems.Count - 1));
-        }
 
         for (var i = 0; i < visibleItems.Count; i++)
         {
@@ -77,28 +56,30 @@ public class FileManagerRenderer(IconProvider iconProvider)
             var isSelected = originalIndex == selectedIndex;
             var style = isSelected ? new Style(background: Color.DodgerBlue1) : Style.Plain;
             var name = CreateNameMarkup(item);
+            var scrollChar = GetScrollbarChar(i, items.Count, pageSize, viewOffset, visibleItems.Count);
 
-
-            var scrollChar = " ";
-            if (items.Count > pageSize)
-            {
-                if (i == 0 && canScrollUp) scrollChar = "⬆";
-                else if (i == visibleItems.Count - 1 && canScrollDown) scrollChar = "⬇";
-                else if (i == thumbPosition) scrollChar = "█";
-                else scrollChar = "║";
-            }
-
-            var scrollbarMarkup = new Markup($"[grey50]{scrollChar}[/]");
-            var row = new IRenderable[]
-            {
+            table.AddRow(
                 new Markup(name, style),
                 new Markup(item.FormattedSize, style),
                 new Markup(item.FormattedDate, style),
-                scrollbarMarkup
-            };
-            table.AddRow(row);
+                new Markup(scrollChar, style)
+            );
         }
         return table;
+    }
+    
+    private static string GetScrollbarChar(int currentIndex, int totalItems, int pageSize, int viewOffset, int visibleCount)
+    {
+        if (totalItems <= pageSize) return " ";
+
+        if (currentIndex == 0 && viewOffset > 0) return "⬆";
+        if (currentIndex == visibleCount - 1 && viewOffset + pageSize < totalItems) return "⬇";
+        
+        var thumbStart = (int)((double)viewOffset / totalItems * visibleCount);
+        var thumbEnd = (int)((double)(viewOffset + pageSize) / totalItems * visibleCount);
+        if (currentIndex >= thumbStart && currentIndex <= thumbEnd) return "█";
+
+        return "║";
     }
 
     private string CreateNameMarkup(FileSystemItem item)
@@ -117,26 +98,11 @@ public class FileManagerRenderer(IconProvider iconProvider)
         return new Panel(Align.Center(instructions)) { Border = BoxBorder.None };
     }
 
-    public void ShowError(string message)
+    public static void ShowError(string message)
     {
         AnsiConsole.Clear();
         AnsiConsole.MarkupLine($"[bold red]Error:[/] [red]{message.EscapeMarkup()}[/]");
         AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
         Console.ReadKey(true);
-    }
-
-    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
-    {
-
-        var header = CreateHeader(currentPath);
-        var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
-        var footer = CreateFooter();
-
-        return new Layout("Root")
-            .SplitRows(
-                new Layout("Header").Update(header).Size(3),
-                new Layout("Body").Update(body),
-                new Layout("Footer").Update(footer).Size(3)
-            );
     }
 }

@@ -14,7 +14,7 @@ public record FileSystemItem(
     private static string FormatBytes(long bytes)
     {
         if (bytes == 0) return "0 B";
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        string[] suffixes = ["B", "KB", "MB", "GB", "TB", "PB"];
         var counter = 0;
         double number = bytes;
         while (Math.Round(number / 1024) >= 1 && counter < suffixes.Length - 1)

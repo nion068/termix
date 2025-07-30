@@ -8,9 +8,12 @@ A modern, high-performance file navigator for your terminal. Built with .NET and
 ---
 # Demo
 
-Watch Termix in action:
 
-https://github.com/user-attachments/assets/c5d1dcb3-6428-441f-a807-6367a464adee
+Watch Termix in action: [Video](https://vimeo.com/1105824424)
+
+https://github.com/user-attachments/assets/364f2d4c-7970-4a22-bf47-201b0be44a60
+
+
 
 ---
 

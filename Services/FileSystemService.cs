@@ -26,7 +26,27 @@ public abstract class FileSystemService
 
         var files = directoryInfo.GetFiles()
             .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(f => new FileSystemItem(f.FullName, f.Name, false, f.Length, f.LastWriteTime));
+            .Select(f =>
+            {
+                var fullName = f.FullName;
+                var name = f.Name;
+                if (name.Length <= 24)
+                    return new FileSystemItem(fullName, name, false, f.Length, f.LastWriteTime);
+                var ext = Path.GetExtension(name);
+                var extLen = ext.Length;
+                var baseLen = 24 - extLen - 2; 
+
+                if (baseLen <= 0)
+                {
+                    name = ".." + ext;
+                }
+                else
+                {
+                    name = string.Concat(name.AsSpan(0, baseLen), "..", ext);
+                }
+                return new FileSystemItem(fullName, name, false, f.Length, f.LastWriteTime);
+            });
+
         items.AddRange(files);
 
         return items;

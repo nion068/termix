@@ -41,7 +41,7 @@ public class  FilePreviewService
             var visibleLines = allLines
                 .Skip(verticalOffset)
                 .Take(previewHeight)
-                .Select(line => line.Length > horizontalOffset ? line.Substring(horizontalOffset) : "")
+                .Select(line => line.Length > horizontalOffset ? line[horizontalOffset..] : "")
                 .ToArray();
 
             IRenderable content;

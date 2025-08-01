@@ -3,7 +3,7 @@
 &nbsp;
 ![Nuget](https://img.shields.io/nuget/v/Termix)
 
-A modern, high-performance file navigator for your terminal. Built with .NET and Spectre.Console, Termix provides a fluid, visually-rich, and flicker-free experience for browsing and managing files directly from the command line.
+A modern, high-performance file navigator for your terminal. Built with .NET and Spectre.Console, Termix provides a fluid, visually-rich, and flicker-free experience for browsing, searching, and managing files directly from the command line.
 
 ---
 # Demo
@@ -19,6 +19,9 @@ https://github.com/user-attachments/assets/364f2d4c-7970-4a22-bf47-201b0be44a60
 
 ## Why You’ll Love Termix
 
+-   **🚀 Instant Search & Filtering**: Filter files and folders recursively as you type with a debounced, high-performance search.
+-   **✍️ Interactive File Management**: Create, rename, and delete files and directories on the fly without leaving the UI.
+-   **🧠 Smart Ignore**: Automatically respects `.gitignore` rules and ignores common development directories (`bin`, `obj`, `node_modules`) for a cleaner, faster search.
 -   **✨ Flicker-Free Rendering**: A smooth double-buffered UI means no redraw artifacts.
 -   **🖥️ Modern Two-Pane Layout**: An intuitive file list and live preview side-by-side.
 -   **🎨 Live Syntax Highlighting**: Instant preview for `.cs`, `.js`, `.ts`, `.py` and more.
@@ -46,8 +49,7 @@ dotnet tool install --global Termix
 
 Then, you can run the application by simply typing:
 ```bash
-termix
-```
+termix```
 
 #### Updating to the Latest Version
 ```bash
@@ -102,6 +104,16 @@ This will replace glyphs with simple, text-based indicators (`[DIR]/`, `..`) tha
 | `Home` / `End` | Jump to start/end of list    |
 | `Q` / `Escape` | Quit Termix                  |
 
+### File Management & Search
+
+| Key(s)         | Action                                                                   |
+|:---------------|:-------------------------------------------------------------------------|
+| `S`            | **Search/Filter** the current directory and subdirectories as you type.    |
+| `A`            | **Add** a new file or directory (e.g., `new.txt` or `folder/`).            |
+| `R`            | **Rename** the selected file or directory.                                 |
+| `D`            | **Delete** the selected item (with confirmation).                          |
+| `Esc`          | Exit search mode or cancel an action.                                    |
+
 ### Preview Pane Controls
 
 | Key(s)        | Action                      |
@@ -118,6 +130,8 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 ### Development Guide
 
 Want to contribute to the code? Here are the key areas:
+-   **Core File Logic**: See `Services/ActionService.cs` for Create, Rename, Delete, and Search operations.
+-   **Ignore Rules**: Modify default ignores or `.gitignore` parsing in `Services/IgnoreService.cs`.
 -   **Adding File Icons**: Modify the `_extensionIcons` dictionary in `Services/IconProvider.cs`.
 -   **Adding Syntax Highlighting**: Add a new `LanguageTheme` in `Services/CustomSyntaxHighlighter.cs`.
 -   **Styling & Colors**: Tweak `Style` objects in `UI/FileManagerRenderer.cs` and `Services/CustomSyntaxHighlighter.cs`.
@@ -127,6 +141,7 @@ Want to contribute to the code? Here are the key areas:
 ## 🙏 Acknowledgements
 
 -   This project would not be possible without the incredible **[Spectre.Console](https://spectreconsole.net/)** library.
+-   Glob pattern matching for the ignore service is powered by **[DotNet.Glob](https://github.com/dazinator/DotNet.Glob)**.
 -   Icons are provided by the **[Nerd Fonts](https://www.nerdfonts.com/)** project.
 -   Inspired by the power and simplicity of .NET global tools.
 

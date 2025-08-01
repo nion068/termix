@@ -7,17 +7,17 @@ namespace termix.UI;
 
 public class FileManagerRenderer(IconProvider iconProvider)
 {
-    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
+    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset, string? footerContent = null)
     {
         var header = CreateHeader(currentPath);
         var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
-        var footer = CreateFooter();
+        var footer = CreateFooter(footerContent);
 
         return new Layout("Root")
             .SplitRows(
                 new Layout("Header").Update(header).Size(3),
                 new Layout("Body").Update(body),
-                new Layout("Footer").Update(footer).Size(3)
+                new Layout("Footer").Update(footer).Size(4) 
             );
     }
 
@@ -89,13 +89,26 @@ public class FileManagerRenderer(IconProvider iconProvider)
         var nameStyle = item.IsDirectory ? "bold" : "";
         return $"{icon}  [{nameStyle}]{name}[/]";
     }
-
-    private static Panel CreateFooter()
+    
+    private static Panel CreateFooter(string? footerContent)
     {
-        var instructions = new Markup(
-            "[grey]Use[/] [cyan]↑↓/JK[/] [grey]to move[/] | [cyan]Enter[/] [grey]to open[/] | [cyan]Backspace[/] [grey]for parent[/] | [cyan]Q[/] [grey]to quit[/]"
-        );
-        return new Panel(Align.Center(instructions)) { Border = BoxBorder.None };
+        IRenderable content;
+        if (!string.IsNullOrEmpty(footerContent))
+        {
+            content = new Panel(new Markup(footerContent))
+            {
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(Color.Yellow),
+                Padding = new Padding(1, 0)
+            };
+        }
+        else
+        {
+            content = new Markup(
+                "[grey]Use[/] [cyan]↑↓/JK[/] [grey]Move[/] | [cyan]Enter[/] [grey]Open[/] | [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]"
+            );
+        }
+        return new Panel(Align.Center(content)) { Border = BoxBorder.None };
     }
 
     public static void ShowError(string message)

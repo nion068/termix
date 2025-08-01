@@ -11,7 +11,8 @@ A modern, high-performance file navigator for your terminal. Built with .NET and
 
 Watch Termix in action: [Video](https://vimeo.com/1105824424)
 
-https://github.com/user-attachments/assets/364f2d4c-7970-4a22-bf47-201b0be44a60
+https://github.com/user-attachments/assets/53192fdb-a882-47c0-8138-c9b4d2cd84c8
+
 
 
 

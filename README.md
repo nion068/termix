@@ -26,7 +26,7 @@ Watch a 1‑minute walkthrough → [Termix on Vimeo](https://vimeo.com/110582442
 * Live syntax highlighting for `.cs`, `.js`, `.ts`, `.py`, and more supported at preview time.
 * Vim‑style shortcuts: use `J/K` with arrows for fast navigation.
 * Nerd‑Font glyphs (configurable fallback to ASCII mode).
-* Cross‑platform: compatible with Windows, macOS, and Linux. :contentReference[oaicite:1]{index=1}
+* Cross‑platform: compatible with Windows, macOS, and Linux.
 
 ---
 
@@ -34,7 +34,7 @@ Watch a 1‑minute walkthrough → [Termix on Vimeo](https://vimeo.com/110582442
 
 ### Prerequisites
 
-You must have **.NET 9 SDK** or later installed. :contentReference[oaicite:2]{index=2}
+You must have **.NET 9 SDK** or later installed.
 
 ### Install as a Global Tool
 
@@ -73,7 +73,7 @@ dotnet run --configuration Release
 ## Icon Support & Fallback Mode
 
 Termix comes with beautiful Nerd Font icons by default. For terminals without Nerd Font support, add `--no-icons` to
-fall back to text‑only glyphs like `[DIR]/` and `…` for ultimate compatibility. :contentReference[oaicite:5]{index=5}
+fall back to text‑only glyphs like `[DIR]/` and `…` for ultimate compatibility.
 
 ---
 

@@ -26,6 +26,7 @@ public class FileManager
 
     private string _addBasePath = "";
     private List<FileSystemItem> _currentItems = [];
+    private readonly Stack<string> _navigationStack = new();
 
     private string _currentPath = Directory.GetCurrentDirectory();
     private IRenderable _currentPreview = new Text("");
@@ -342,6 +343,7 @@ public class FileManager
                 CurrentMode = InputMode.FilteredNavigation;
             }
 
+            _navigationStack.Push(selectedItem.Name);
             NavigateToDirectory(selectedItem.Path);
         }
         else
@@ -368,14 +370,14 @@ public class FileManager
     }
 
 
-    private void NavigateToDirectory(string path)
+    private void NavigateToDirectory(string path, string? findAndSelect = null)
     {
         if (CurrentMode != InputMode.FilteredNavigation) ResetToNormalMode();
 
         try
         {
             _currentPath = Path.GetFullPath(path);
-            RefreshDirectory(setInitialSelection: true);
+            RefreshDirectory(findAndSelect: findAndSelect, setInitialSelection: true);
         }
         catch (Exception ex)
         {
@@ -394,7 +396,11 @@ public class FileManager
         }
 
         var parent = Directory.GetParent(_currentPath);
-        if (parent != null) NavigateToDirectory(parent.FullName);
+
+        if (parent != null)
+        {
+            NavigateToDirectory(parent.FullName, _navigationStack.TryPop(out var result) ? result : null);
+        }
     }
 
     private void LoadCurrentDirectory()

@@ -101,7 +101,7 @@ This will replace glyphs with simple, text-based indicators (`[DIR]/`, `..`) tha
 | ↑ / ↓          | Move selection up or down    |
 | `J` / `K`      | Vim-style selection movement |
 | `Enter`        | Open file or directory       |
-| `Backspace`    | Go to parent directory       |
+| `Backspace` / `H` | Go to parent directory       |
 | `Home` / `End` | Jump to start/end of list    |
 | `Q` / `Escape` | Quit Termix                  |
 

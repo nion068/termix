@@ -35,7 +35,7 @@ public class InputHandler(FileManager fileManager)
         switch (key)
         {
             case ConsoleKey.Enter: fileManager.OpenSelectedItem(); break;
-            case ConsoleKey.Backspace: fileManager.NavigateUp(); break;
+            case ConsoleKey.Backspace or ConsoleKey.H: fileManager.NavigateUp(); break;
             case ConsoleKey.A: fileManager.BeginAdd(); break;
             case ConsoleKey.R: fileManager.BeginRename(); break;
             case ConsoleKey.D: fileManager.BeginDelete(); break;

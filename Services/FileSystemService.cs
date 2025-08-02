@@ -12,12 +12,10 @@ public abstract class FileSystemService
         var directoryInfo = new DirectoryInfo(path);
 
         if (directoryInfo.Parent != null)
-        {
             items.Add(new FileSystemItem(
                 directoryInfo.Parent.FullName, "..", true, 0,
-                directoryInfo.Parent.LastWriteTime, IsParentDirectory: true
+                directoryInfo.Parent.LastWriteTime, true
             ));
-        }
 
         var directories = directoryInfo.GetDirectories()
             .OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
@@ -34,16 +32,12 @@ public abstract class FileSystemService
                     return new FileSystemItem(fullName, name, false, f.Length, f.LastWriteTime);
                 var ext = Path.GetExtension(name);
                 var extLen = ext.Length;
-                var baseLen = 24 - extLen - 2; 
+                var baseLen = 24 - extLen - 2;
 
                 if (baseLen <= 0)
-                {
                     name = ".." + ext;
-                }
                 else
-                {
                     name = string.Concat(name.AsSpan(0, baseLen), "..", ext);
-                }
                 return new FileSystemItem(fullName, name, false, f.Length, f.LastWriteTime);
             });
 

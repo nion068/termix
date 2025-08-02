@@ -22,6 +22,7 @@ public record FileSystemItem(
             number /= 1024;
             counter++;
         }
+
         return $"{number:N1} {suffixes[counter]}";
     }
 }

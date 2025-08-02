@@ -7,7 +7,7 @@ public partial record LanguageTheme
 {
     public Dictionary<string, Style> TokenStyles { get; init; } = new();
     public Regex TokenizerRegex { get; init; } = MyRegex();
-    
+
     [GeneratedRegex("")]
     private static partial Regex MyRegex();
 }

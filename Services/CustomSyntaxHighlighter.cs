@@ -1,24 +1,26 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Spectre.Console;
+using termix.models;
+
 namespace termix.Services;
 
 public class CustomSyntaxHighlighter
 {
-    private readonly Dictionary<string, models.LanguageTheme> _themes = new();
+    private readonly Dictionary<string, LanguageTheme> _themes = new();
 
     public CustomSyntaxHighlighter()
     {
-        var styleControl = new Style(Color.Plum1); 
-        var styleKeyword = new Style(Color.SkyBlue2); 
-        var styleType = new Style(Color.Teal); 
-        var styleString = new Style(Color.Gold3); 
-        var styleComment = new Style(Color.Grey58); 
-        var styleNumber = new Style(Color.Magenta2); 
-        var styleFunction = new Style(Color.LightGreen); 
-        var styleBuiltin = new Style(Color.Turquoise2); 
+        var styleControl = new Style(Color.Plum1);
+        var styleKeyword = new Style(Color.SkyBlue2);
+        var styleType = new Style(Color.Teal);
+        var styleString = new Style(Color.Gold3);
+        var styleComment = new Style(Color.Grey58);
+        var styleNumber = new Style(Color.Magenta2);
+        var styleFunction = new Style(Color.LightGreen);
+        var styleBuiltin = new Style(Color.Turquoise2);
 
-        _themes[".cs"] = new models.LanguageTheme
+        _themes[".cs"] = new LanguageTheme
         {
             TokenStyles = new Dictionary<string, Style>
             {
@@ -28,7 +30,7 @@ public class CustomSyntaxHighlighter
                 { "keyword", styleKeyword },
                 { "control", styleControl },
                 { "type", styleType },
-                { "function", styleFunction },
+                { "function", styleFunction }
             },
             TokenizerRegex = BuildRegex(
                 keywords:
@@ -41,7 +43,7 @@ public class CustomSyntaxHighlighter
             )
         };
 
-        _themes[".py"] = new models.LanguageTheme
+        _themes[".py"] = new LanguageTheme
         {
             TokenStyles = new Dictionary<string, Style>
             {
@@ -61,7 +63,7 @@ public class CustomSyntaxHighlighter
             )
         };
 
-        _themes[".js"] = new models.LanguageTheme
+        _themes[".js"] = new LanguageTheme
         {
             TokenStyles = new Dictionary<string, Style>
             {
@@ -83,9 +85,9 @@ public class CustomSyntaxHighlighter
             )
         };
 
-        _themes[".ts"] = new models.LanguageTheme
+        _themes[".ts"] = new LanguageTheme
         {
-            TokenStyles = _themes[".js"].TokenStyles, 
+            TokenStyles = _themes[".js"].TokenStyles,
             TokenizerRegex = BuildRegex(
                 keywords:
                 [
@@ -137,11 +139,9 @@ public class CustomSyntaxHighlighter
 
     public Markup Highlight(string code, string languageExtension)
     {
-        var langKey = languageExtension.ToLowerInvariant(); 
+        var langKey = languageExtension.ToLowerInvariant();
         if (string.IsNullOrEmpty(langKey) || !_themes.TryGetValue(langKey, out var theme))
-        {
             return new Markup(code.EscapeMarkup());
-        }
 
         var sb = new StringBuilder();
 
@@ -153,9 +153,7 @@ public class CustomSyntaxHighlighter
             foreach (Match match in matches)
             {
                 if (match.Index > lastIndex)
-                {
                     sb.Append(line.Substring(lastIndex, match.Index - lastIndex).EscapeMarkup());
-                }
 
                 var groupName = theme.TokenizerRegex.GetGroupNames()
                     .Skip(1)
@@ -165,17 +163,11 @@ public class CustomSyntaxHighlighter
                 {
                     var valueToStyle = match.Value;
 
-                    if (groupName == "function")
-                    {
-                        valueToStyle = match.Groups[1].Value;
-                    }
+                    if (groupName == "function") valueToStyle = match.Groups[1].Value;
 
                     sb.Append($"[{style.ToMarkup()}]{valueToStyle.EscapeMarkup()}[/]");
 
-                    if (groupName == "function")
-                    {
-                        sb.Append('(');
-                    }
+                    if (groupName == "function") sb.Append('(');
                 }
                 else
                 {
@@ -185,10 +177,7 @@ public class CustomSyntaxHighlighter
                 lastIndex = match.Index + match.Length;
             }
 
-            if (lastIndex < line.Length)
-            {
-                sb.Append(line[lastIndex..].EscapeMarkup());
-            }
+            if (lastIndex < line.Length) sb.Append(line[lastIndex..].EscapeMarkup());
 
             sb.AppendLine();
         }

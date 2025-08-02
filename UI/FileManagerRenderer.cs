@@ -7,7 +7,8 @@ namespace termix.UI;
 
 public class FileManagerRenderer(IconProvider iconProvider)
 {
-    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset, string? footerContent = null)
+    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex,
+        IRenderable previewContent, int viewOffset, string? footerContent = null)
     {
         var header = CreateHeader(currentPath);
         var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
@@ -17,7 +18,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
             .SplitRows(
                 new Layout("Header").Update(header).Size(3),
                 new Layout("Body").Update(body),
-                new Layout("Footer").Update(footer).Size(4) 
+                new Layout("Footer").Update(footer).Size(4)
             );
     }
 
@@ -32,7 +33,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
     {
         var fileTable = CreateFileTable(items, selectedIndex, viewOffset);
         return new Layout("Body").SplitColumns(
-            new Layout("FileList").Update(fileTable).Ratio(2),
+            new Layout("FileList").Update(fileTable).Ratio(3),
             new Layout("Preview").Update(previewContent).Ratio(3)
         );
     }
@@ -65,16 +66,18 @@ public class FileManagerRenderer(IconProvider iconProvider)
                 new Markup(scrollChar, style)
             );
         }
+
         return table;
     }
-    
-    private static string GetScrollbarChar(int currentIndex, int totalItems, int pageSize, int viewOffset, int visibleCount)
+
+    private static string GetScrollbarChar(int currentIndex, int totalItems, int pageSize, int viewOffset,
+        int visibleCount)
     {
         if (totalItems <= pageSize) return " ";
 
         if (currentIndex == 0 && viewOffset > 0) return "⬆";
         if (currentIndex == visibleCount - 1 && viewOffset + pageSize < totalItems) return "⬇";
-        
+
         var thumbStart = (int)((double)viewOffset / totalItems * visibleCount);
         var thumbEnd = (int)((double)(viewOffset + pageSize) / totalItems * visibleCount);
         if (currentIndex >= thumbStart && currentIndex <= thumbEnd) return "█";
@@ -89,25 +92,24 @@ public class FileManagerRenderer(IconProvider iconProvider)
         var nameStyle = item.IsDirectory ? "bold" : "";
         return $"{icon}  [{nameStyle}]{name}[/]";
     }
-    
+
     private static Panel CreateFooter(string? footerContent)
     {
         IRenderable content;
         if (!string.IsNullOrEmpty(footerContent))
-        {
             content = new Panel(new Markup(footerContent))
             {
                 Border = BoxBorder.Rounded,
                 BorderStyle = new Style(Color.Yellow),
                 Padding = new Padding(1, 0)
             };
-        }
         else
-        {
             content = new Markup(
-                "[grey]Use[/] [cyan]↑↓/JK[/] [grey]Move[/] | [cyan]Enter[/] [grey]Open[/] | [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]"
+                "[grey]Use[/] [cyan]↑↓/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] " +
+                "[cyan]Enter/O[/] [grey]Open[/] | [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | " +
+                "[cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]"
             );
-        }
+
         return new Panel(Align.Center(content)) { Border = BoxBorder.None };
     }
 

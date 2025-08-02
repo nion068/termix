@@ -4,42 +4,46 @@ public class InputHandler(FileManager fileManager)
 {
     public bool ProcessKey(ConsoleKeyInfo keyInfo)
     {
-        if (fileManager.CurrentMode == FileManager.InputMode.Normal)
-        {
-            fileManager.ClearStatusMessage();
-        }
+        fileManager.ClearStatusMessage();
 
-        return fileManager.CurrentMode switch
-        {
-            FileManager.InputMode.Normal => HandleNormalKeyPress(keyInfo),
-            _ => HandleInputModeKeyPress(keyInfo)
-        };
+        if (fileManager.CurrentMode != FileManager.InputMode.Normal || !fileManager.IsViewFiltered ||
+            keyInfo.Key != ConsoleKey.Escape)
+            return fileManager.CurrentMode switch
+            {
+                FileManager.InputMode.Normal or FileManager.InputMode.FilteredNavigation => HandleNormalKeyPress(
+                    keyInfo),
+                _ => HandleInputModeKeyPress(keyInfo)
+            };
+        fileManager.ClearFilter();
+        return true;
     }
 
     private bool HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
     {
         var key = keyInfo.Key;
-        var modifier = keyInfo.Modifiers;
 
-        if (fileManager.IsShowingSearchResults && (key is ConsoleKey.Escape or ConsoleKey.Backspace))
-        {
-            fileManager.ExitSearch();
-            return true;
-        }
-        
-        if (key is ConsoleKey.Q or ConsoleKey.Escape) return false;
-
-        if (HandleSelectionMovement(key)) return true;
-        if (HandlePreviewScrolling(key, modifier)) return true;
-        
         switch (key)
         {
-            case ConsoleKey.Enter: fileManager.OpenSelectedItem(); break;
-            case ConsoleKey.Backspace: fileManager.NavigateUp(); break;
+            case ConsoleKey.Q or ConsoleKey.Escape when !fileManager.IsViewFiltered:
+                return false;
+            case ConsoleKey.B when fileManager.CurrentMode == FileManager.InputMode.FilteredNavigation:
+                fileManager.ReturnToFilter();
+                return true;
+        }
+
+        if (HandleSelectionMovement(key, keyInfo.Modifiers)) return true;
+
+        switch (key)
+        {
+            case ConsoleKey.Enter:
+            case ConsoleKey.L:
+            case ConsoleKey.O: fileManager.OpenSelectedItem(); break;
+            case ConsoleKey.Backspace:
+            case ConsoleKey.H: fileManager.NavigateUp(); break;
             case ConsoleKey.A: fileManager.BeginAdd(); break;
             case ConsoleKey.R: fileManager.BeginRename(); break;
             case ConsoleKey.D: fileManager.BeginDelete(); break;
-            case ConsoleKey.S: fileManager.BeginSearch(); break;
+            case ConsoleKey.S: fileManager.BeginFilter(); break;
         }
 
         return true;
@@ -49,8 +53,8 @@ public class InputHandler(FileManager fileManager)
     {
         switch (fileManager.CurrentMode)
         {
-            case FileManager.InputMode.Search:
-                HandleSearchInput(keyInfo);
+            case FileManager.InputMode.Filter:
+                HandleFilterInput(keyInfo);
                 break;
             case FileManager.InputMode.Add or FileManager.InputMode.Rename:
                 HandleStandardTextInput(keyInfo);
@@ -59,31 +63,35 @@ public class InputHandler(FileManager fileManager)
                 HandleDeleteConfirmation(keyInfo.Key);
                 break;
         }
+
         return true;
     }
 
-    private void HandleSearchInput(ConsoleKeyInfo keyInfo)
+    private void HandleFilterInput(ConsoleKeyInfo keyInfo)
     {
         switch (keyInfo.Key)
         {
             case ConsoleKey.Enter:
-                fileManager.FinalizeSearch();
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.DownArrow:
+                fileManager.AcceptFilter();
+                HandleNormalKeyPress(keyInfo);
                 break;
+
             case ConsoleKey.Escape:
-                fileManager.ExitSearch();
+                fileManager.AcceptFilter();
                 break;
+
             case ConsoleKey.Backspace:
-                fileManager.UpdateSearchQuery(fileManager.GetInputText(sliceEnd: -1));
-                break;
-            default:
-            {
-                if (!char.IsControl(keyInfo.KeyChar))
-                {
-                    fileManager.UpdateSearchQuery(fileManager.GetInputText() + keyInfo.KeyChar);
-                }
+                if (fileManager.GetInputText().Length > 0) fileManager.UpdateFilter(fileManager.GetInputText(-1));
 
                 break;
-            }
+
+            default:
+                if (!char.IsControl(keyInfo.KeyChar))
+                    fileManager.UpdateFilter(fileManager.GetInputText() + keyInfo.KeyChar);
+
+                break;
         }
     }
 
@@ -102,19 +110,40 @@ public class InputHandler(FileManager fileManager)
 
     private void HandleDeleteConfirmation(ConsoleKey key)
     {
-        if (key == ConsoleKey.Y) fileManager.CommitDelete();
-        else if (key is ConsoleKey.N or ConsoleKey.Escape) fileManager.ResetToNormalMode();
+        switch (key)
+        {
+            case ConsoleKey.Y:
+                fileManager.CommitDelete();
+                break;
+            case ConsoleKey.N or ConsoleKey.Escape:
+                fileManager.ResetToNormalMode();
+                break;
+        }
     }
-    
-    private bool HandleSelectionMovement(ConsoleKey key)
+
+    private bool HandleSelectionMovement(ConsoleKey key, ConsoleModifiers modifier)
     {
+        if (modifier == ConsoleModifiers.Alt)
+        {
+            (int v, int h) offset = key switch
+            {
+                ConsoleKey.UpArrow or ConsoleKey.K => (-1, 0),
+                ConsoleKey.DownArrow or ConsoleKey.J => (1, 0),
+                ConsoleKey.LeftArrow or ConsoleKey.H => (0, -5),
+                ConsoleKey.RightArrow or ConsoleKey.L => (0, 5),
+                _ => (0, 0)
+            };
+            if (offset == (0, 0)) return false;
+            fileManager.ScrollPreview(offset.v, offset.h);
+            return true;
+        }
+
         var direction = key switch
         {
             ConsoleKey.DownArrow or ConsoleKey.J => 1,
             ConsoleKey.UpArrow or ConsoleKey.K => -1,
             _ => 0
         };
-
         if (direction != 0)
         {
             fileManager.MoveSelection(direction);
@@ -123,24 +152,6 @@ public class InputHandler(FileManager fileManager)
 
         if (key is not (ConsoleKey.Home or ConsoleKey.End)) return false;
         fileManager.MoveSelectionToEdge(key == ConsoleKey.Home);
-        return true;
-    }
-
-    private bool HandlePreviewScrolling(ConsoleKey key, ConsoleModifiers modifier)
-    {
-        if (modifier != ConsoleModifiers.Alt) return false;
-        
-        (int v, int h) offset = key switch
-        {
-            ConsoleKey.UpArrow or ConsoleKey.K => (-1, 0),
-            ConsoleKey.DownArrow or ConsoleKey.J => (1, 0),
-            ConsoleKey.LeftArrow or ConsoleKey.H => (0, -5),
-            ConsoleKey.RightArrow or ConsoleKey.L => (0, 5),
-            _ => (0, 0)
-        };
-
-        if (offset == (0, 0)) return false;
-        fileManager.ScrollPreview(offset.v, offset.h);
         return true;
     }
 }

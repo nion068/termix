@@ -4,6 +4,16 @@ namespace termix.Services;
 
 public class IconProvider(bool useIcons)
 {
+    private const string DefaultFileIcon = "\uF15B";
+    private const string FolderIcon = "\uE5FF";
+    private const string ParentFolderIcon = "\uF062";
+
+    private const string DefaultFileFallback = "  ";
+
+    private const string FolderFallback = "[[DIR]]";
+
+    private const string ParentFolderFallback = "[[..]]";
+
     private readonly Dictionary<string, string> _extensionIcons = new()
     {
         { ".cs", "\uE73A" }, { ".js", "\uE74E" }, { ".json", "\uE60B" },
@@ -18,17 +28,8 @@ public class IconProvider(bool useIcons)
         { ".mkv", "\uF1C8" }, { ".zip", "\uF1C6" }, { ".rar", "\uF1C6" },
         { ".7z", "\uF1C6" }, { ".exe", "\uE70F" }, { ".msi", "\uE70F" },
         { ".dll", "\uF81B" }, { ".git", "\uE702" }, { ".gitignore", "\uE702" },
-        { ".yml", "\uF481" }, { ".yaml", " \uF481" },
+        { ".yml", "\uF481" }, { ".yaml", " \uF481" }
     };
-    private const string DefaultFileIcon = "\uF15B";
-    private const string FolderIcon = "\uE5FF";
-    private const string ParentFolderIcon = "\uF062";
-
-    private const string DefaultFileFallback = "  "; 
-    
-    private const string FolderFallback = "[[DIR]]";      
-    
-    private const string ParentFolderFallback = "[[..]]";
 
     public string GetIcon(FileSystemItem item)
     {

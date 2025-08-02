@@ -18,12 +18,8 @@ public class IgnoreService
     {
         var patterns = new List<string>
         {
-            "**/bin/**",
-            "**/obj/**",
-            "**/node_modules/**",
-            "**/.git/**",
-            "**/.vs/**",
-            "**/.vscode/**"
+            "**/bin/**", "**/obj/**", "**/node_modules/**",
+            "**/.git/**", "**/.vs/**", "**/.vscode/**"
         };
 
         var currentPath = new DirectoryInfo(startPath);
@@ -33,11 +29,12 @@ public class IgnoreService
             if (File.Exists(gitignoreFile))
             {
                 var lines = File.ReadAllLines(gitignoreFile)
-                                .Select(line => line.Trim())
-                                .Where(line => !string.IsNullOrEmpty(line) && !line.StartsWith('#'));
-                
+                    .Select(line => line.Trim())
+                    .Where(line => !string.IsNullOrEmpty(line) && !line.StartsWith('#'));
+
                 patterns.AddRange(lines);
             }
+
             currentPath = currentPath.Parent;
         }
 
@@ -46,10 +43,7 @@ public class IgnoreService
 
     public bool IsIgnored(string fullPath)
     {
-        var relativePath = Path.GetRelativePath(_rootPath, fullPath);
-
-        relativePath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
-
+        var relativePath = Path.GetRelativePath(_rootPath, fullPath).Replace(Path.DirectorySeparatorChar, '/');
         return _ignoreGlobs.Any(glob => glob.IsMatch(relativePath));
     }
 }

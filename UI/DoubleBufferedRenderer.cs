@@ -5,8 +5,8 @@ namespace termix.UI;
 
 public class DoubleBufferedRenderer
 {
-    private readonly StringWriter _writer;
     private readonly IAnsiConsole _console;
+    private readonly StringWriter _writer;
 
     public DoubleBufferedRenderer()
     {
@@ -15,7 +15,7 @@ public class DoubleBufferedRenderer
         _console = AnsiConsole.Create(new AnsiConsoleSettings
         {
             ColorSystem = ColorSystemSupport.TrueColor,
-            Out = new AnsiConsoleOutput(_writer),
+            Out = new AnsiConsoleOutput(_writer)
         });
     }
 

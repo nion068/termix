@@ -14,31 +14,35 @@ public class FileManager
         Add,
         Rename,
         DeleteConfirm,
-        Search
+        Filter,
+        FilteredNavigation
     }
 
-    public InputMode CurrentMode { get; private set; } = InputMode.Normal;
-    public bool IsShowingSearchResults { get; private set; }
-
-    private string _promptText = "";
-    private string _inputText = "";
-    private string? _statusMessage;
-
-    private List<FileSystemItem> _fullSearchResults = [];
-    private CancellationTokenSource _debounceCts = new();
+    private readonly DoubleBufferedRenderer _doubleBuffer = new();
 
     private readonly FilePreviewService _filePreviewService = new();
-    private readonly FileManagerRenderer _renderer;
-    private readonly DoubleBufferedRenderer _doubleBuffer = new();
     private readonly InputHandler _inputHandler;
+    private readonly FileManagerRenderer _renderer;
+
+    private string _addBasePath = "";
+    private List<FileSystemItem> _currentItems = [];
 
     private string _currentPath = Directory.GetCurrentDirectory();
-    private int _selectedIndex;
-    private List<FileSystemItem> _currentItems = [];
     private IRenderable _currentPreview = new Text("");
-    private int _viewOffset;
-    private int _previewVerticalOffset;
+    private CancellationTokenSource _debounceCts = new();
+    private string _inputText = "";
+    private bool _isDeepSearchRunning;
     private int _previewHorizontalOffset;
+    private int _previewVerticalOffset;
+
+    private string _promptText = "";
+    private List<FileSystemItem>? _recursiveSearchCache;
+
+    private (string Path, string Filter, List<FileSystemItem> Items, int SelectedIndex)? _savedFilterState;
+    private int _selectedIndex;
+    private string? _statusMessage;
+    private List<FileSystemItem> _unfilteredItems = [];
+    private int _viewOffset;
 
     public FileManager(bool useIcons)
     {
@@ -46,6 +50,9 @@ public class FileManager
         _renderer = new FileManagerRenderer(iconProvider);
         _inputHandler = new InputHandler(this);
     }
+
+    public InputMode CurrentMode { get; private set; } = InputMode.Normal;
+    public bool IsViewFiltered => !string.IsNullOrEmpty(_inputText);
 
     public void Run()
     {
@@ -65,10 +72,28 @@ public class FileManager
     private string? GetFooterContent()
     {
         if (_statusMessage != null) return _statusMessage;
+
+        switch (CurrentMode)
+        {
+            case InputMode.FilteredNavigation:
+                return
+                    "[grey]Use[/] [cyan]B[/] [grey]to return to search results[/] | [grey]Currently browsing from a search result.[/]";
+            case InputMode.Normal when IsViewFiltered:
+            {
+                var input = _inputText ?? string.Empty;
+                return
+                    $"[grey]Results for '[yellow]{input.EscapeMarkup()}[/]'. Press [cyan]Esc[/] to clear, or [cyan]S[/] for new search.[/]";
+            }
+        }
+
+        var safeInput = _inputText ?? string.Empty;
+        var searchIndicator = _isDeepSearchRunning ? "[grey](Searching...)[/]" : "";
         return CurrentMode switch
         {
-            InputMode.Add or InputMode.Rename or InputMode.Search =>
-                $"{_promptText.EscapeMarkup()}[yellow]{_inputText.EscapeMarkup()}[/][grey]█[/]",
+            InputMode.Filter =>
+                $"{_promptText.EscapeMarkup()}{searchIndicator} [yellow]{safeInput.EscapeMarkup()}[/][grey]█[/] | [grey]Press[/] [cyan]Esc[/] [grey]to navigate results[/]",
+            InputMode.Add or InputMode.Rename =>
+                $"{_promptText.EscapeMarkup()}[yellow]{safeInput.EscapeMarkup()}[/][grey]█[/]",
             InputMode.DeleteConfirm => _promptText,
             _ => null
         };
@@ -76,9 +101,20 @@ public class FileManager
 
     #region Public Methods for InputHandler
 
-    public string GetInputText(int? sliceEnd = null) => sliceEnd.HasValue ? _inputText[..^1] : _inputText;
-    public void ClearStatusMessage() => _statusMessage = null;
-    public void AppendInputText(char c) => _inputText += c;
+    public string GetInputText(int? sliceEnd = null)
+    {
+        return sliceEnd.HasValue ? _inputText[..^1] : _inputText;
+    }
+
+    public void ClearStatusMessage()
+    {
+        _statusMessage = null;
+    }
+
+    public void AppendInputText(char c)
+    {
+        _inputText += c;
+    }
 
     public void HandleBackspace()
     {
@@ -87,16 +123,40 @@ public class FileManager
 
     public void ResetToNormalMode()
     {
+        _debounceCts.Cancel();
+        _isDeepSearchRunning = false;
         CurrentMode = InputMode.Normal;
         _inputText = "";
+        _promptText = "";
+    }
+
+    public void AcceptFilter()
+    {
+        CurrentMode = InputMode.Normal;
         _promptText = "";
     }
 
     public void BeginAdd()
     {
         CurrentMode = InputMode.Add;
-        _promptText = $"Create in [{GetDisplayFolderName(GetSelectedItem())}]: ";
         _inputText = "";
+        var selectedItem = _selectedIndex >= 0 && _selectedIndex < _currentItems.Count
+            ? GetSelectedItem()
+            : null;
+
+        if (selectedItem is { IsDirectory: true, IsParentDirectory: false })
+        {
+            _addBasePath = selectedItem.Path;
+            _promptText = $"Create in [{selectedItem.Name.EscapeMarkup()}]: ";
+        }
+        else
+        {
+            _addBasePath = _currentPath;
+            var currentFolderName = Path.GetFileName(Path.GetFullPath(_currentPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(currentFolderName)) currentFolderName = _currentPath;
+            _promptText = $"Create in [{currentFolderName.EscapeMarkup()}]: ";
+        }
     }
 
     public void BeginRename()
@@ -114,91 +174,94 @@ public class FileManager
         _promptText = $"Delete '{GetSelectedItem().Name.EscapeMarkup()}'? [bold green]y[/]/[bold red]n[/]";
     }
 
-    public void BeginSearch()
+    public void BeginFilter()
     {
-        CurrentMode = InputMode.Search;
-        _promptText = "Filter: ";
+        CurrentMode = InputMode.Filter;
+        _promptText = "Search: ";
         _inputText = "";
-        _fullSearchResults.Clear();
-        LoadCurrentDirectory();
+        _recursiveSearchCache = null;
     }
 
-    public void ExitSearch()
+    public void UpdateFilter(string newFilterText)
     {
-        IsShowingSearchResults = false;
-        _statusMessage = "Exited search.";
-        RefreshDirectory(setInitialSelection: true);
-        ResetToNormalMode();
-    }
-
-    public void FinalizeSearch()
-    {
-        IsShowingSearchResults = true;
-        _statusMessage = $"Showing {_currentItems.Count} results. Press Esc to exit.";
-        ResetToNormalMode();
-    }
-
-    public void UpdateSearchQuery(string newQuery)
-    {
-        _inputText = newQuery;
+        _inputText = newFilterText;
         _debounceCts.Cancel();
         _debounceCts = new CancellationTokenSource();
+        var token = _debounceCts.Token;
 
-        Task.Run(async () =>
+        if (_recursiveSearchCache == null && !_isDeepSearchRunning && !string.IsNullOrEmpty(_inputText))
         {
-            await Task.Delay(200, _debounceCts.Token);
-            if (_debounceCts.IsCancellationRequested) return;
-
-            if (_fullSearchResults.Count == 0 && !string.IsNullOrEmpty(_inputText))
+            _isDeepSearchRunning = true;
+            ActionService.GetDeepDirectoryContentsAsync(_currentPath, token).ContinueWith(task =>
             {
-                var response = ActionService.Search(_currentPath, _inputText);
-                if (response is { Success: true, Payload: List<FileSystemItem> results })
+                if (task.IsCompletedSuccessfully)
                 {
-                    _fullSearchResults = results;
+                    _recursiveSearchCache = task.Result;
+                    if (!token.IsCancellationRequested && _inputText.Length > 0) ApplyFilter();
                 }
-            }
 
-            if (string.IsNullOrEmpty(_inputText))
-            {
-                _currentItems = _fullSearchResults;
-            }
-            else
-            {
-                _currentItems = _fullSearchResults
-                    .Where(item => item.Name.Contains(_inputText, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
+                _isDeepSearchRunning = false;
+            }, token);
+        }
 
-            _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
-            AdjustViewPort();
-            UpdatePreview();
-        }, _debounceCts.Token);
+        ApplyFilter();
+    }
+
+    public void ClearFilter()
+    {
+        _inputText = "";
+        _recursiveSearchCache = null;
+        _currentItems = new List<FileSystemItem>(_unfilteredItems);
+        ResetToNormalMode();
+        RefreshViewAfterFilter();
     }
 
     public void CommitStandardTextInput()
     {
         var response = CurrentMode == InputMode.Add
-            ? ActionService.Create(_currentPath, _inputText)
+            ? ActionService.Create(_addBasePath, _inputText)
             : ActionService.Rename(_currentPath, GetSelectedItem().Name, _inputText);
 
         _statusMessage = response.Message;
-        if (response.Success) RefreshDirectory(findAndSelect: (string?)response.Payload);
         ResetToNormalMode();
+        if (response.Success) RefreshDirectory((string?)response.Payload);
     }
 
     public void CommitDelete()
     {
         var response = ActionService.Delete(GetSelectedItem());
         _statusMessage = response.Message;
-        if (response.Success) RefreshDirectory(preserveSelection: true);
         ResetToNormalMode();
+        if (response.Success) RefreshDirectory(preserveSelection: true);
     }
 
     #endregion
 
     #region UI & State Updates
 
-    private FileSystemItem GetSelectedItem() => _currentItems[_selectedIndex];
+    private void ApplyFilter()
+    {
+        var sourceList = _recursiveSearchCache ?? _unfilteredItems;
+
+        _currentItems = string.IsNullOrEmpty(_inputText)
+            ? [.._unfilteredItems]
+            : sourceList
+                .Where(item => item.Name.Contains(_inputText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        RefreshViewAfterFilter();
+    }
+
+    private void RefreshViewAfterFilter()
+    {
+        _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
+        AdjustViewPort();
+        UpdatePreview();
+    }
+
+    private FileSystemItem GetSelectedItem()
+    {
+        return _currentItems[_selectedIndex];
+    }
 
     private void RefreshDirectory(string? findAndSelect = null, bool preserveSelection = false,
         bool setInitialSelection = false)
@@ -207,18 +270,11 @@ public class FileManager
         LoadCurrentDirectory();
 
         if (findAndSelect != null)
-        {
             _selectedIndex =
                 _currentItems.FindIndex(item => item.Name.Equals(findAndSelect, StringComparison.OrdinalIgnoreCase));
-        }
         else if (preserveSelection)
-        {
             _selectedIndex = Math.Clamp(oldSelectedIndex, 0, _currentItems.Count - 1);
-        }
-        else if (setInitialSelection)
-        {
-            _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
-        }
+        else if (setInitialSelection) _selectedIndex = _currentItems.Count != 0 ? 0 : -1;
 
         if (_selectedIndex == -1 && _currentItems.Count != 0) _selectedIndex = 0;
 
@@ -256,7 +312,7 @@ public class FileManager
     {
         _previewVerticalOffset = Math.Max(0, _previewVerticalOffset + vertical);
         _previewHorizontalOffset = Math.Max(0, _previewHorizontalOffset + horizontal);
-        UpdatePreview(resetScroll: false);
+        UpdatePreview(false);
     }
 
     private void UpdatePreview(bool resetScroll = true)
@@ -267,8 +323,8 @@ public class FileManager
             _previewHorizontalOffset = 0;
         }
 
-        var selectedItem = (_selectedIndex >= 0 && _selectedIndex < _currentItems.Count) ? GetSelectedItem() : null;
-        _currentPreview = (selectedItem == null || selectedItem.IsDirectory)
+        var selectedItem = _selectedIndex >= 0 && _selectedIndex < _currentItems.Count ? GetSelectedItem() : null;
+        _currentPreview = selectedItem == null || selectedItem.IsDirectory
             ? _filePreviewService.GetPreview(null, 0, 0)
             : _filePreviewService.GetPreview(selectedItem.Path, _previewVerticalOffset, _previewHorizontalOffset);
     }
@@ -277,8 +333,15 @@ public class FileManager
     {
         if (_currentItems.Count == 0) return;
         var selectedItem = GetSelectedItem();
+
         if (selectedItem.IsDirectory)
         {
+            if (IsViewFiltered && CurrentMode != InputMode.FilteredNavigation)
+            {
+                _savedFilterState = (_currentPath, _inputText, new List<FileSystemItem>(_currentItems), _selectedIndex);
+                CurrentMode = InputMode.FilteredNavigation;
+            }
+
             NavigateToDirectory(selectedItem.Path);
         }
         else
@@ -287,9 +350,28 @@ public class FileManager
         }
     }
 
+
+    public void ReturnToFilter()
+    {
+        if (!_savedFilterState.HasValue) return;
+
+        var state = _savedFilterState.Value;
+        _currentPath = state.Path;
+        _inputText = state.Filter;
+        _currentItems = state.Items;
+        _selectedIndex = state.SelectedIndex;
+        _savedFilterState = null;
+        CurrentMode = InputMode.Filter;
+
+        AdjustViewPort();
+        UpdatePreview();
+    }
+
+
     private void NavigateToDirectory(string path)
     {
-        IsShowingSearchResults = false;
+        if (CurrentMode != InputMode.FilteredNavigation) ResetToNormalMode();
+
         try
         {
             _currentPath = Path.GetFullPath(path);
@@ -303,7 +385,13 @@ public class FileManager
 
     public void NavigateUp()
     {
-        if (IsShowingSearchResults) return;
+        if (CurrentMode is not (InputMode.Normal or InputMode.FilteredNavigation)) return;
+
+        if (IsViewFiltered)
+        {
+            ClearFilter();
+            return;
+        }
 
         var parent = Directory.GetParent(_currentPath);
         if (parent != null) NavigateToDirectory(parent.FullName);
@@ -313,24 +401,16 @@ public class FileManager
     {
         try
         {
-            if (!IsShowingSearchResults)
-            {
-                _currentItems = FileSystemService.GetDirectoryContents(_currentPath);
-            }
+            _unfilteredItems = FileSystemService.GetDirectoryContents(_currentPath);
+            if (CurrentMode != InputMode.Filter) _currentItems = new List<FileSystemItem>(_unfilteredItems);
         }
         catch (Exception ex)
         {
             _statusMessage = $"[red]Error loading directory: {ex.Message.EscapeMarkup()}[/]";
             _currentItems = [];
+            _unfilteredItems = [];
             _selectedIndex = -1;
         }
-    }
-
-    private string GetDisplayFolderName(FileSystemItem item)
-    {
-        return item.IsDirectory
-            ? item.Name
-            : Path.GetFileName(Path.GetDirectoryName(item.Path) ?? _currentPath);
     }
 
     #endregion

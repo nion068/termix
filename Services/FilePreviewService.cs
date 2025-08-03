@@ -8,6 +8,7 @@ public class FilePreviewService
 {
     private static readonly string[] SourceArray = [".jpg", ".jpeg", ".png", ".gif", ".bmp"];
     private readonly CustomSyntaxHighlighter _highlighter = new();
+    private const string TabReplacement = "    ";
 
     public IRenderable GetPreview(string? filePath, int verticalOffset, int horizontalOffset)
     {
@@ -36,7 +37,7 @@ public class FilePreviewService
             var visibleLines = allLines
                 .Skip(verticalOffset)
                 .Take(previewHeight)
-                .Select(line => line.Length > horizontalOffset ? line[horizontalOffset..] : "")
+                .Select(line => line.Length > horizontalOffset ? line[horizontalOffset..].Replace("\t", TabReplacement) : "")
                 .ToArray();
 
             IRenderable content;

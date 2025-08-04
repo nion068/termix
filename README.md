@@ -1,143 +1,128 @@
 # Termix
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)  ![NuGet](https://img.shields.io/nuget/v/Termix)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg) ![NuGet](https://img.shields.io/nuget/v/Termix)
 
-_A modern, high‑performance file navigator for your terminal._  
-Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, flicker‑free interface for navigating,
-searching, and managing files—all from your terminal.
+A modern, high-performance file navigator for your terminal. Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, flicker-free interface for navigating, searching, and managing files—all from your terminal.
 
 ---
-
 ## Demo
-
 https://github.com/user-attachments/assets/53192fdb-a882-47c0-8138-c9b4d2cd84c8
 
 Watch a 1‑minute walkthrough → [Termix on Vimeo](https://vimeo.com/1105824424)
 
----
+##  Features 
 
-## 🚀 Why You’ll Love Termix
-
-* Instant recursive filtering as you type (`S` → search mode). Press `Esc` to apply the filter, navigate matches, then
-  `Esc` again to clear.
-* Create, rename, or delete files and directories right within the UI (`A`, `R`, `D`).
-* Respects `.gitignore` and filters out `bin/`, `obj/`, `node_modules/` by default for speed and clarity.
-* Double‑buffered UI ensures flicker‑free rendering and a smooth two‑pane layout.
-* Live syntax highlighting for `.cs`, `.js`, `.ts`, `.py`, and more supported at preview time.
-* Vim‑style shortcuts: use `J/K` with arrows for fast navigation.
-* Nerd‑Font glyphs (configurable fallback to ASCII mode).
-* Cross‑platform: compatible with Windows, macOS, and Linux.
+*   **Instant Recursive Filtering**: Start typing to filter files and directories in real-time.
+*   **Intuitive File Operations**: Create, rename, move, copy, and delete files and directories directly within the UI with progress bar for long-running tasks.
+*   **Smart Ignoring**: Respects `.gitignore` and automatically filters out `bin/`, `obj/`, and `node_modules/` to keep your view clean.
+*   **Flicker-Free UI**: A double-buffered interface ensures smooth rendering in a two-pane layout.
+*   **Live Syntax Highlighting**: Preview a variety of file types with syntax highlighting, including `.cs`, `.js`, `.ts`, and `.py`.
+*   **Vim-Style Navigation**: Use `J`/`K` alongside arrow keys for efficient movement.
+*   **Nerd Font Support**: Enhance your experience with Nerd Font icons, with a fallback to ASCII for maximum compatibility.
+*   **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux.
 
 ---
 
-## 📦 Installation
+##  Installation
 
 ### Prerequisites
 
-You must have **.NET 9 SDK** or later installed.
+You must have the **.NET 9 SDK** or a later version installed on your system.
 
 ### Install as a Global Tool
 
 ```bash
 dotnet tool install --global Termix
-````
+```
 
-Launch it simply with:
+Launch the application by simply running:
 
 ```bash
 termix
 ```
 
-### Update
+### Updating Termix
+
+To update to the latest version, use the following command:
 
 ```bash
 dotnet tool update --global Termix
 ```
 
-### Uninstall
+### Uninstalling Termix
 
-```bash
+You can uninstall the tool at any time with:
+
+```
 dotnet tool uninstall --global Termix
 ```
 
-### From Source (Optional)
-
-```bash
-git clone https://github.com/amrohan/termix.git
-cd termix
-dotnet run --configuration Release
-```
-
 ---
 
-## Icon Support & Fallback Mode
-
-Termix comes with beautiful Nerd Font icons by default. For terminals without Nerd Font support, add `--no-icons` to
-fall back to text‑only glyphs like `[DIR]/` and `…` for ultimate compatibility.
-
----
-
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 ### Navigation
 
 | Keys              | Action                       |
-|-------------------|------------------------------|
+|:------------------|:-----------------------------|
 | ↑ / ↓             | Move selection up/down       |
 | `J` / `K`         | Vim-style movement           |
 | `Enter` / `L`     | Open file or enter directory |
 | `Backspace` / `H` | Go to parent directory       |
 | `Home` / `End`    | Jump to first or last entry  |
-| `Q` or `Esc`      | Quit Termix                  |
+| `Q`               | Quit Termix                  |
 
-### Search, Filter & File Ops
+### File Operations
 
-| Keys                      | Action                                          |
-|---------------------------|-------------------------------------------------|
-| `S`                       | Enter search mode (ﬁlters recursively as typed) |
-| `Esc` (during typing)     | Apply filter and navigate results               |
-| `Esc` (during navigation) | Clear filter and show all items                 |
-| `B`                       | Move back to search results when navigating     |
-| `A`                       | Create a new file or folder                     |
-| `R`                       | Rename selected file or folder                  |
-| `D`                       | Delete selected item (with confirmation)        |
+| Keys                  | Action                                              |
+|:----------------------|:----------------------------------------------------|
+| `S`                   | Enter search mode (filters recursively as you type) |
+| `Esc` (during search) | Apply the filter and navigate the results           |
+| `Esc` (after search)  | Clear the filter and show all items                 |
+| `B`                   | Go back to the search results when navigating       |
+| `A`                   | Create a new file or folder                         |
+| `R`                   | Rename the selected file or folder                  |
+| `D`                   | Delete the selected item (with confirmation)        |
+| `X`                   | Move the selected file or folder                    |
+| `C`                   | Copy the selected file or folder                    |
+| `P`                   | Paste the file or folder                            |
 
-### Preview Pane Scrolling
+### Preview Pane
 
-- `Alt + ↑ / ↓`: Scroll vertically
-- `Alt + ← / →`: Scroll horizontally
+| Keys          | Action              |
+|:--------------|:--------------------|
+| `Alt + ↑ / ↓` | Scroll vertically   |
+| `Alt + ← / →` | Scroll horizontally |
 
 ---
 
-## 🛠️ Contributing
+## Contributing
 
-Contributions, bug reports, and feature requests are very welcome!
-See [the Issues page](https://github.com/amrohan/termix/issues) to get started.
+We welcome contributions, bug reports, and feature requests! Please visit the [Issues page](https://github.com/amrohan/termix/issues) to get started.
 
 ### Developer Roadmap
 
-Fork & clone the repo, then open Visual Studio, VS Code, or your editor of choice. Key components:
+If you'd like to contribute to the development of Termix, fork and clone the repository, then open it in your preferred editor such as Visual Studio or VS Code. Key components of the project include:
 
-- `Services/ActionService.cs`: Create / Rename / Delete / Search logic
-- `Services/IgnoreService.cs`: `.gitignore` and default ignore rules
-- `Services/IconProvider.cs`: File type icon mappings (_extensionIcons_)
-- `Services/CustomSyntaxHighlighter.cs`: Add new language themes
-- `UI/FileManagerRenderer.cs`: Styling and pane rendering logic
+*   `Services/ActionService.cs`: Logic for creating, renaming, deleting, and searching.
+*   `Services/IgnoreService.cs`: Handles `.gitignore` and default ignore rules.
+*   `Services/IconProvider.cs`: Manages file type icon mappings.
+*   `Services/CustomSyntaxHighlighter.cs`: Add new language themes here.
+*   `UI/FileManagerRenderer.cs`: Contains the logic for styling and rendering panes.
 
-Branch from `main`, commit using descriptive messages, and send pull requests with tests included.
-
-
----
-
-## 🧠 Acknowledgements
-
-- Made possible by the fantastic Spectre.Console
-- Glob-style ignore matching via DotNet.Glob
-- Icons powered by the NerdFonts project
-- Inspired by the elegance and simplicity of .NET Global Tools
+Please branch from `main`, use descriptive commit messages.
 
 ---
 
-## 📄 License
+##  Acknowledgements
 
-Termix is licensed under the **MIT License**. 
+*   This project is made possible by the fantastic [Spectre.Console](https://spectreconsole.net/).
+*   Glob-style ignore matching is handled by [DotNet.Glob](https://github.com/dazinator/DotNet.Glob).
+*   Icons are powered by the [Nerd Fonts](https://www.nerdfonts.com/) project.
+*   Inspired by the simplicity and elegance of .NET Global Tools.
+
+---
+
+## License
+
+Termix is licensed under the **MIT License**.

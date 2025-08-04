@@ -15,16 +15,18 @@ public class FileManager
         Rename,
         DeleteConfirm,
         Filter,
-        FilteredNavigation
+        FilteredNavigation,
+        QuitConfirm
     }
 
     private readonly DoubleBufferedRenderer _doubleBuffer = new();
-
     private readonly FilePreviewService _filePreviewService = new();
     private readonly InputHandler _inputHandler;
+    private readonly Stack<string> _navigationStack = new();
     private readonly FileManagerRenderer _renderer;
 
     private string _addBasePath = "";
+    private ClipboardItem? _clipboard;
     private List<FileSystemItem> _currentItems = [];
 
     private string _currentPath = Directory.GetCurrentDirectory();
@@ -32,6 +34,9 @@ public class FileManager
     private CancellationTokenSource _debounceCts = new();
     private string _inputText = "";
     private bool _isDeepSearchRunning;
+    private bool _isOperationInProgress;
+    private bool _needsRedraw = true;
+    private CancellationTokenSource? _operationCts;
     private int _previewHorizontalOffset;
     private int _previewVerticalOffset;
 
@@ -40,6 +45,7 @@ public class FileManager
 
     private (string Path, string Filter, List<FileSystemItem> Items, int SelectedIndex)? _savedFilterState;
     private int _selectedIndex;
+    private bool _shouldQuit;
     private string? _statusMessage;
     private List<FileSystemItem> _unfilteredItems = [];
     private int _viewOffset;
@@ -59,14 +65,30 @@ public class FileManager
         AnsiConsole.Clear();
         RefreshDirectory(setInitialSelection: true);
 
-        while (true)
+        while (!_shouldQuit)
         {
-            var layout = _renderer.GetLayout(_currentPath, _currentItems, _selectedIndex, _currentPreview, _viewOffset,
-                GetFooterContent());
-            _doubleBuffer.Render(layout);
+            if (_needsRedraw)
+            {
+                _needsRedraw = false;
+                if (!_isOperationInProgress)
+                {
+                    var layout = _renderer.GetLayout(_currentPath, _currentItems, _selectedIndex, _currentPreview,
+                        _viewOffset, GetFooterContent(), _clipboard);
+                    _doubleBuffer.Render(layout);
+                }
+            }
 
-            if (!_inputHandler.ProcessKey(Console.ReadKey(true))) break;
+            while (!Console.KeyAvailable && !_needsRedraw && !_shouldQuit) Thread.Sleep(50);
+
+            if (_shouldQuit) break;
+
+            if (Console.KeyAvailable) _inputHandler.ProcessKey(Console.ReadKey(true));
         }
+    }
+
+    private void SetNeedsRedraw()
+    {
+        _needsRedraw = true;
     }
 
     private string? GetFooterContent()
@@ -80,13 +102,13 @@ public class FileManager
                     "[grey]Use[/] [cyan]B[/] [grey]to return to search results[/] | [grey]Currently browsing from a search result.[/]";
             case InputMode.Normal when IsViewFiltered:
             {
-                var input = _inputText ?? string.Empty;
+                var input = _inputText;
                 return
                     $"[grey]Results for '[yellow]{input.EscapeMarkup()}[/]'. Press [cyan]Esc[/] to clear, or [cyan]S[/] for new search.[/]";
             }
         }
 
-        var safeInput = _inputText ?? string.Empty;
+        var safeInput = _inputText;
         var searchIndicator = _isDeepSearchRunning ? "[grey](Searching...)[/]" : "";
         return CurrentMode switch
         {
@@ -94,12 +116,24 @@ public class FileManager
                 $"{_promptText.EscapeMarkup()}{searchIndicator} [yellow]{safeInput.EscapeMarkup()}[/][grey]█[/] | [grey]Press[/] [cyan]Esc[/] [grey]to navigate results[/]",
             InputMode.Add or InputMode.Rename =>
                 $"{_promptText.EscapeMarkup()}[yellow]{safeInput.EscapeMarkup()}[/][grey]█[/]",
-            InputMode.DeleteConfirm => _promptText,
+            InputMode.DeleteConfirm or InputMode.QuitConfirm => _promptText,
             _ => null
         };
     }
 
     #region Public Methods for InputHandler
+
+    public bool HasClipboardItem()
+    {
+        return _clipboard != null;
+    }
+
+    public void ClearClipboard()
+    {
+        _clipboard = null;
+        _statusMessage = "[grey]Clipboard cleared.[/]";
+        SetNeedsRedraw();
+    }
 
     public string GetInputText(int? sliceEnd = null)
     {
@@ -108,17 +142,26 @@ public class FileManager
 
     public void ClearStatusMessage()
     {
-        _statusMessage = null;
+        if (_statusMessage != null)
+        {
+            _statusMessage = null;
+            SetNeedsRedraw();
+        }
     }
 
     public void AppendInputText(char c)
     {
         _inputText += c;
+        SetNeedsRedraw();
     }
 
     public void HandleBackspace()
     {
-        if (_inputText.Length > 0) _inputText = _inputText[..^1];
+        if (_inputText.Length > 0)
+        {
+            _inputText = _inputText[..^1];
+            SetNeedsRedraw();
+        }
     }
 
     public void ResetToNormalMode()
@@ -128,12 +171,14 @@ public class FileManager
         CurrentMode = InputMode.Normal;
         _inputText = "";
         _promptText = "";
+        SetNeedsRedraw();
     }
 
     public void AcceptFilter()
     {
         CurrentMode = InputMode.Normal;
         _promptText = "";
+        SetNeedsRedraw();
     }
 
     public void BeginAdd()
@@ -157,6 +202,8 @@ public class FileManager
             if (string.IsNullOrEmpty(currentFolderName)) currentFolderName = _currentPath;
             _promptText = $"Create in [{currentFolderName.EscapeMarkup()}]: ";
         }
+
+        SetNeedsRedraw();
     }
 
     public void BeginRename()
@@ -165,6 +212,7 @@ public class FileManager
         CurrentMode = InputMode.Rename;
         _promptText = "Rename: ";
         _inputText = GetSelectedItem().Name;
+        SetNeedsRedraw();
     }
 
     public void BeginDelete()
@@ -172,6 +220,123 @@ public class FileManager
         if (_currentItems.Count == 0 || GetSelectedItem().IsParentDirectory) return;
         CurrentMode = InputMode.DeleteConfirm;
         _promptText = $"Delete '{GetSelectedItem().Name.EscapeMarkup()}'? [bold green]y[/]/[bold red]n[/]";
+        SetNeedsRedraw();
+    }
+
+    public void BeginCopy()
+    {
+        if (_currentItems.Count == 0 || GetSelectedItem().IsParentDirectory) return;
+        var item = GetSelectedItem();
+        _clipboard = new ClipboardItem(item, ClipboardMode.Copy);
+        _statusMessage = $"[yellow]{item.Name.EscapeMarkup()}[/] copied to clipboard.";
+        SetNeedsRedraw();
+    }
+
+    public void BeginMove()
+    {
+        if (_currentItems.Count == 0 || GetSelectedItem().IsParentDirectory) return;
+        var item = GetSelectedItem();
+        _clipboard = new ClipboardItem(item, ClipboardMode.Move);
+        _statusMessage = $"[yellow]{item.Name.EscapeMarkup()}[/] marked for move.";
+        SetNeedsRedraw();
+    }
+
+    public void BeginPaste()
+    {
+        if (_clipboard == null)
+        {
+            _statusMessage = "[red]Clipboard is empty.[/]";
+            SetNeedsRedraw();
+            return;
+        }
+
+        var destinationBasePath = _currentPath;
+        var selectedItem = _currentItems.Count > 0 && _selectedIndex >= 0 ? GetSelectedItem() : null;
+
+        if (selectedItem is { IsDirectory: true, IsParentDirectory: false }) destinationBasePath = selectedItem.Path;
+
+        var sourcePath = _clipboard.Item.Path;
+        var destPath = Path.Combine(destinationBasePath, _clipboard.Item.Name);
+
+        if (sourcePath.Equals(destPath, StringComparison.OrdinalIgnoreCase) ||
+            (Directory.GetParent(sourcePath)?.FullName
+                 .Equals(destinationBasePath, StringComparison.OrdinalIgnoreCase) == true &&
+             _clipboard.Mode == ClipboardMode.Move))
+        {
+            _statusMessage = "[yellow]Source and destination are the same.[/]";
+            if (_clipboard.Mode == ClipboardMode.Move) ClearClipboard();
+            SetNeedsRedraw();
+            return;
+        }
+
+        if (File.Exists(destPath) || Directory.Exists(destPath))
+        {
+            _statusMessage = $"[red]An item named '{_clipboard.Item.Name.EscapeMarkup()}' already exists here.[/]";
+            SetNeedsRedraw();
+            return;
+        }
+
+        var clipboardItem = _clipboard;
+        ClearClipboard();
+
+        _isOperationInProgress = true;
+        _operationCts = new CancellationTokenSource();
+        var token = _operationCts.Token;
+
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .StartAsync(async ctx =>
+            {
+                var task = ctx.AddTask($"Preparing to {clipboardItem.Mode.ToString().ToLower()}...");
+                ActionResponse response;
+
+                try
+                {
+                    if (clipboardItem.Mode == ClipboardMode.Copy)
+                        response = await ActionService.CopyAsync(sourcePath, destPath, task, token);
+                    else
+                        response = await ActionService.MoveAsync(sourcePath, destPath, task, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    response = new ActionResponse(false, "[yellow]Operation was cancelled by user.[/]");
+                }
+                catch (Exception ex)
+                {
+                    response = new ActionResponse(false,
+                        $"[red]An unexpected error occurred: {ex.Message.EscapeMarkup()}[/]");
+                }
+
+                _statusMessage = response.Message;
+            })
+            .ContinueWith(_ =>
+            {
+                _isOperationInProgress = false;
+                _operationCts?.Dispose();
+                _operationCts = null;
+                RefreshDirectory();
+            }, token);
+    }
+
+    public void RequestQuit()
+    {
+        if (_isOperationInProgress)
+        {
+            CurrentMode = InputMode.QuitConfirm;
+            _promptText = "[bold yellow]A file operation is in progress. Quit and cancel? (y/n)[/]";
+            SetNeedsRedraw();
+        }
+        else
+        {
+            _shouldQuit = true;
+        }
+    }
+
+    public void Quit(bool force = false)
+    {
+        if (force && _isOperationInProgress) _operationCts?.Cancel();
+        _shouldQuit = true;
     }
 
     public void BeginFilter()
@@ -180,11 +345,13 @@ public class FileManager
         _promptText = "Search: ";
         _inputText = "";
         _recursiveSearchCache = null;
+        SetNeedsRedraw();
     }
 
     public void UpdateFilter(string newFilterText)
     {
         _inputText = newFilterText;
+        SetNeedsRedraw();
         _debounceCts.Cancel();
         _debounceCts = new CancellationTokenSource();
         var token = _debounceCts.Token;
@@ -192,6 +359,7 @@ public class FileManager
         if (_recursiveSearchCache == null && !_isDeepSearchRunning && !string.IsNullOrEmpty(_inputText))
         {
             _isDeepSearchRunning = true;
+            SetNeedsRedraw();
             ActionService.GetDeepDirectoryContentsAsync(_currentPath, token).ContinueWith(task =>
             {
                 if (task.IsCompletedSuccessfully)
@@ -201,6 +369,7 @@ public class FileManager
                 }
 
                 _isDeepSearchRunning = false;
+                SetNeedsRedraw();
             }, token);
         }
 
@@ -289,6 +458,7 @@ public class FileManager
         _viewOffset = _selectedIndex < _viewOffset ? _selectedIndex :
             _selectedIndex >= _viewOffset + pageSize ? _selectedIndex - pageSize + 1 : _viewOffset;
         _viewOffset = Math.Clamp(_viewOffset, 0, Math.Max(0, _currentItems.Count - pageSize));
+        SetNeedsRedraw();
     }
 
     public void MoveSelection(int direction)
@@ -327,6 +497,7 @@ public class FileManager
         _currentPreview = selectedItem == null || selectedItem.IsDirectory
             ? _filePreviewService.GetPreview(null, 0, 0)
             : _filePreviewService.GetPreview(selectedItem.Path, _previewVerticalOffset, _previewHorizontalOffset);
+        SetNeedsRedraw();
     }
 
     public void OpenSelectedItem()
@@ -338,10 +509,12 @@ public class FileManager
         {
             if (IsViewFiltered && CurrentMode != InputMode.FilteredNavigation)
             {
-                _savedFilterState = (_currentPath, _inputText, new List<FileSystemItem>(_currentItems), _selectedIndex);
+                _savedFilterState = (_currentPath, _inputText, [.._currentItems], _selectedIndex);
                 CurrentMode = InputMode.FilteredNavigation;
+                SetNeedsRedraw();
             }
 
+            _navigationStack.Push(selectedItem.Name);
             NavigateToDirectory(selectedItem.Path);
         }
         else
@@ -349,7 +522,6 @@ public class FileManager
             FileSystemService.OpenFile(selectedItem.Path);
         }
     }
-
 
     public void ReturnToFilter()
     {
@@ -367,19 +539,19 @@ public class FileManager
         UpdatePreview();
     }
 
-
-    private void NavigateToDirectory(string path)
+    private void NavigateToDirectory(string path, string? findAndSelect = null)
     {
         if (CurrentMode != InputMode.FilteredNavigation) ResetToNormalMode();
 
         try
         {
             _currentPath = Path.GetFullPath(path);
-            RefreshDirectory(setInitialSelection: true);
+            RefreshDirectory(findAndSelect, setInitialSelection: true);
         }
         catch (Exception ex)
         {
             _statusMessage = $"[red]Navigation failed: {ex.Message.EscapeMarkup()}[/]";
+            SetNeedsRedraw();
         }
     }
 
@@ -394,7 +566,9 @@ public class FileManager
         }
 
         var parent = Directory.GetParent(_currentPath);
-        if (parent != null) NavigateToDirectory(parent.FullName);
+
+        if (parent != null)
+            NavigateToDirectory(parent.FullName, _navigationStack.TryPop(out var result) ? result : null);
     }
 
     private void LoadCurrentDirectory()
@@ -402,7 +576,7 @@ public class FileManager
         try
         {
             _unfilteredItems = FileSystemService.GetDirectoryContents(_currentPath);
-            if (CurrentMode != InputMode.Filter) _currentItems = new List<FileSystemItem>(_unfilteredItems);
+            if (CurrentMode != InputMode.Filter) _currentItems = [.._unfilteredItems];
         }
         catch (Exception ex)
         {
@@ -411,6 +585,8 @@ public class FileManager
             _unfilteredItems = [];
             _selectedIndex = -1;
         }
+
+        SetNeedsRedraw();
     }
 
     #endregion

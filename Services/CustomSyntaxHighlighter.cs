@@ -162,12 +162,15 @@ public class CustomSyntaxHighlighter
                 if (groupName != null && theme.TokenStyles.TryGetValue(groupName, out var style))
                 {
                     var valueToStyle = match.Value;
+                    var hasTrailingParenthesis = groupName == "function" && valueToStyle.EndsWith('(');
 
-                    if (groupName == "function") valueToStyle = match.Groups[1].Value;
+                    if (hasTrailingParenthesis)
+                        valueToStyle = valueToStyle[..^1];
 
                     sb.Append($"[{style.ToMarkup()}]{valueToStyle.EscapeMarkup()}[/]");
 
-                    if (groupName == "function") sb.Append('(');
+                    if (hasTrailingParenthesis)
+                        sb.Append('(');
                 }
                 else
                 {

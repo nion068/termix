@@ -8,11 +8,11 @@ namespace termix.UI;
 public class FileManagerRenderer(IconProvider iconProvider)
 {
     public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex,
-        IRenderable previewContent, int viewOffset, string? footerContent = null)
+        IRenderable previewContent, int viewOffset, string? footerContent = null, ClipboardItem? clipboardItem = null)
     {
         var header = CreateHeader(currentPath);
         var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
-        var footer = CreateFooter(footerContent);
+        var footer = CreateFooter(footerContent, clipboardItem);
 
         return new Layout("Root")
             .SplitRows(
@@ -93,26 +93,34 @@ public class FileManagerRenderer(IconProvider iconProvider)
         return $"{icon}  [{nameStyle}]{name}[/]";
     }
 
-    private static Panel CreateFooter(string? footerContent)
+    private static Panel CreateFooter(string? footerContent, ClipboardItem? clipboardItem)
     {
         IRenderable content;
         if (!string.IsNullOrEmpty(footerContent))
+        {
             content = new Panel(new Markup(footerContent))
             {
                 Border = BoxBorder.Rounded,
                 BorderStyle = new Style(Color.Yellow),
                 Padding = new Padding(1, 0)
             };
+        }
+        else if (clipboardItem != null)
+        {
+            var mode = clipboardItem.Mode == ClipboardMode.Copy ? "Copy" : "Move";
+            content = new Markup($"[grey]Clipboard ({mode}):[/] [yellow]{clipboardItem.Item.Name.EscapeMarkup()}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
+        }
         else
+        {
             content = new Markup(
-                "[grey]Use[/] [cyan]↑↓/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] " +
-                "[cyan]Enter/O[/] [grey]Open[/] | [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | " +
-                "[cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]"
+                "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]C[/] Copy | [cyan]X[/] Move | [cyan]P[/] Paste " +
+                "| [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]"
             );
+        }
 
         return new Panel(Align.Center(content)) { Border = BoxBorder.None };
     }
-
+    
     public static void ShowError(string message)
     {
         AnsiConsole.Clear();

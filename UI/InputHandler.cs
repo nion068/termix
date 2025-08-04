@@ -2,36 +2,47 @@ namespace termix.UI;
 
 public class InputHandler(FileManager fileManager)
 {
-    public bool ProcessKey(ConsoleKeyInfo keyInfo)
+    public void ProcessKey(ConsoleKeyInfo keyInfo)
     {
         fileManager.ClearStatusMessage();
 
-        if (fileManager.CurrentMode != FileManager.InputMode.Normal || !fileManager.IsViewFiltered ||
+        if (keyInfo.Key == ConsoleKey.Escape && fileManager.HasClipboardItem())
+        {
+            fileManager.ClearClipboard();
+            return;
+        }
+
+        if (fileManager.CurrentMode != FileManager.InputMode.Normal || fileManager.IsViewFiltered ||
             keyInfo.Key != ConsoleKey.Escape)
-            return fileManager.CurrentMode switch
+            switch (fileManager.CurrentMode)
             {
-                FileManager.InputMode.Normal or FileManager.InputMode.FilteredNavigation => HandleNormalKeyPress(
-                    keyInfo),
-                _ => HandleInputModeKeyPress(keyInfo)
-            };
-        fileManager.ClearFilter();
-        return true;
+                case FileManager.InputMode.Normal or FileManager.InputMode.FilteredNavigation:
+                    HandleNormalKeyPress(keyInfo);
+                    break;
+                default:
+                    HandleInputModeKeyPress(keyInfo);
+                    break;
+            }
+        else
+            fileManager.ClearFilter();
     }
 
-    private bool HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
+    private void HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
     {
         var key = keyInfo.Key;
 
         switch (key)
         {
-            case ConsoleKey.Q or ConsoleKey.Escape when !fileManager.IsViewFiltered:
-                return false;
+            case ConsoleKey.Q:
+            case ConsoleKey.Escape when !fileManager.IsViewFiltered:
+                fileManager.RequestQuit();
+                return;
             case ConsoleKey.B when fileManager.CurrentMode == FileManager.InputMode.FilteredNavigation:
                 fileManager.ReturnToFilter();
-                return true;
+                return;
         }
 
-        if (HandleSelectionMovement(key, keyInfo.Modifiers)) return true;
+        if (HandleSelectionMovement(key, keyInfo.Modifiers)) return;
 
         switch (key)
         {
@@ -44,12 +55,13 @@ public class InputHandler(FileManager fileManager)
             case ConsoleKey.R: fileManager.BeginRename(); break;
             case ConsoleKey.D: fileManager.BeginDelete(); break;
             case ConsoleKey.S: fileManager.BeginFilter(); break;
+            case ConsoleKey.C: fileManager.BeginCopy(); break;
+            case ConsoleKey.X: fileManager.BeginMove(); break;
+            case ConsoleKey.P: fileManager.BeginPaste(); break;
         }
-
-        return true;
     }
 
-    private bool HandleInputModeKeyPress(ConsoleKeyInfo keyInfo)
+    private void HandleInputModeKeyPress(ConsoleKeyInfo keyInfo)
     {
         switch (fileManager.CurrentMode)
         {
@@ -62,9 +74,23 @@ public class InputHandler(FileManager fileManager)
             case FileManager.InputMode.DeleteConfirm:
                 HandleDeleteConfirmation(keyInfo.Key);
                 break;
+            case FileManager.InputMode.QuitConfirm:
+                HandleQuitConfirmation(keyInfo.Key);
+                break;
         }
+    }
 
-        return true;
+    private void HandleQuitConfirmation(ConsoleKey key)
+    {
+        switch (key)
+        {
+            case ConsoleKey.Y:
+                fileManager.Quit(true);
+                break;
+            case ConsoleKey.N or ConsoleKey.Escape:
+                fileManager.ResetToNormalMode();
+                break;
+        }
     }
 
     private void HandleFilterInput(ConsoleKeyInfo keyInfo)
@@ -84,13 +110,11 @@ public class InputHandler(FileManager fileManager)
 
             case ConsoleKey.Backspace:
                 if (fileManager.GetInputText().Length > 0) fileManager.UpdateFilter(fileManager.GetInputText(-1));
-
                 break;
 
             default:
                 if (!char.IsControl(keyInfo.KeyChar))
                     fileManager.UpdateFilter(fileManager.GetInputText() + keyInfo.KeyChar);
-
                 break;
         }
     }

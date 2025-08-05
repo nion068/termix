@@ -2,7 +2,7 @@
 <package>
     <metadata>
         <id>termix</id>
-        <version>1.0.0</version>
+        <version>1.3.0</version>
         <title>Termix</title>
         <authors>Rohan Salunkhe</authors>
         <projectUrl>https://github.com/amrohan/termix</projectUrl>

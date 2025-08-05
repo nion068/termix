@@ -3,7 +3,7 @@ name: Publish Chocolatey Package
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   publish:
@@ -12,6 +12,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
 
       - name: Set up Chocolatey
         run: |
@@ -23,7 +28,7 @@ jobs:
         run: |
           $tag = "${{ github.ref }}".Split("/")[-1]
           $version = $tag.TrimStart("v")
-          echo "VERSION=$version" >> $env:GITHUB_ENV
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "📦 Version to publish: $version"
 
       - name: Update version in .nuspec
@@ -33,6 +38,9 @@ jobs:
             -replace '<version>.*</version>', "<version>${{ env.VERSION }}</version>" |
             Set-Content $nuspecPath.PSPath
           Write-Host "✅ Updated version to $env:VERSION"
+
+      - name: Build and publish project
+        run: dotnet publish --configuration Release
 
       - name: Pack NuGet package
         run: choco pack

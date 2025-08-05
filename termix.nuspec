@@ -16,6 +16,6 @@
     </metadata>
     <files>
         <file src="bin\Release\net9.0\publish\**" target="tools" />
-        <file src="..\LICENSE.txt" target="tools" />
+        <file src="LICENSE.txt" target="tools" />
     </files>
 </package>

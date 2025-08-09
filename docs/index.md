@@ -6,7 +6,7 @@ hero:
   text: "Modern Terminal File Navigator"
   tagline: A high-performance, visually rich file manager for your terminal.
   image:
-    src: /assets/home.png
+    src: /home.png
     alt: Termix Demo
   actions:
     - theme: brand

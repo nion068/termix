@@ -22,7 +22,10 @@ Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, f
 
 ##  Demo
 
-https://github.com/user-attachments/assets/53192fdb-a882-47c0-8138-c9b4d2cd84c8
+
+https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
+
+
 
 > **Watch the full walkthrough** → [Termix on Vimeo](https://vimeo.com/1105824424) *(1 minute)*
 

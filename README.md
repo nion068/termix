@@ -14,7 +14,7 @@
 
 Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, flicker-free interface for navigating, searching, and managing files—all from your terminal.
 
-[Demo](#-demo) • [Features](#-features) • [Installation](#-installation) • [ Keyboard Shortcuts](#️-keyboard-shortcuts) • [ Contributing](#-contributing) • [ License](#-license)
+[Documentation](https://termix.pages.dev)
 
 </div>
 
@@ -118,6 +118,7 @@ dotnet tool uninstall --global termix
 | `Alt + ← / →` | Scroll horizontally |
 
 ##  Documentation
+You can find the detail [documentation here](https://termix.pages.dev)
 
 ### Configuration
 

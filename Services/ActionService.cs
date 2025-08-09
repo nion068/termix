@@ -121,9 +121,9 @@ public abstract class ActionService
             return new ActionResponse(false, $"[red]Delete failed: {ex.Message.EscapeMarkup()}[/]");
         }
     }
-
-    public static async Task<ActionResponse> MoveAsync(string sourcePath, string destinationPath, ProgressTask task,
-        CancellationToken token)
+    
+    public static async Task<ActionResponse> MoveAsync(string sourcePath, string destinationPath,
+        IProgress<(long totalBytes, long completedBytes, string currentFile)> progress, CancellationToken token)
     {
         try
         {
@@ -132,20 +132,22 @@ public abstract class ActionService
 
             if (sourceDrive == destDrive)
             {
-                task.Description = $"Moving [green]{Path.GetFileName(sourcePath).EscapeMarkup()}[/]";
+                progress.Report((1, 0, $"Moving [green]{Path.GetFileName(sourcePath).EscapeMarkup()}[/]"));
                 Directory.Move(sourcePath, destinationPath);
-                task.Increment(100);
+                progress.Report((1, 1, $"Moved [green]{Path.GetFileName(sourcePath).EscapeMarkup()}[/]"));
                 return new ActionResponse(true, $"[green]Moved '{Path.GetFileName(sourcePath).EscapeMarkup()}'[/]");
             }
 
-            var copyResponse = await CopyAsync(sourcePath, destinationPath, task, token, true);
+            var copyResponse = await CopyAsync(sourcePath, destinationPath, progress, token, true);
             if (copyResponse.Success)
             {
-                task.Description = $"Cleaning up original for [green]{Path.GetFileName(sourcePath).EscapeMarkup()}[/]";
-                if (File.Exists(sourcePath))
-                    File.Delete(sourcePath);
-                else
+                progress.Report((1, 1,
+                    $"Cleaning up original for [green]{Path.GetFileName(sourcePath).EscapeMarkup()}[/]"));
+                if (File.GetAttributes(sourcePath).HasFlag(FileAttributes.Directory))
                     Directory.Delete(sourcePath, true);
+                else
+                    File.Delete(sourcePath);
+
                 return new ActionResponse(true,
                     $"[green]Moved '{Path.GetFileName(sourcePath).EscapeMarkup()}' across drives[/]");
             }
@@ -159,8 +161,9 @@ public abstract class ActionService
         }
     }
 
-    public static async Task<ActionResponse> CopyAsync(string sourcePath, string destinationPath, ProgressTask task,
-        CancellationToken token, bool isMove = false)
+    public static async Task<ActionResponse> CopyAsync(string sourcePath, string destinationPath,
+        IProgress<(long totalBytes, long completedBytes, string currentFile)> progress, CancellationToken token,
+        bool isMove = false)
     {
         var operationName = isMove ? "Moving" : "Copying";
         try
@@ -169,21 +172,31 @@ public abstract class ActionService
             {
                 var sourceDir = new DirectoryInfo(sourcePath);
                 var totalSize = GetDirectorySize(sourceDir);
-                task.MaxValue = totalSize;
-                task.Description = $"{operationName} directory [green]{sourceDir.Name.EscapeMarkup()}[/]";
+                long completedBytes = 0;
 
-                await CopyDirectoryRecursive(sourceDir, new DirectoryInfo(destinationPath), task, token);
+                progress.Report((totalSize, 0, $"{operationName} directory [green]{sourceDir.Name.EscapeMarkup()}[/]"));
+                await CopyDirectoryRecursive(sourceDir, new DirectoryInfo(destinationPath), token, (chunkCopied) =>
+                {
+                    completedBytes += chunkCopied;
+                    progress.Report((totalSize, completedBytes, "")); 
+                });
             }
             else
             {
                 var sourceFile = new FileInfo(sourcePath);
-                task.MaxValue = sourceFile.Length;
-                task.Description = $"{operationName} file [green]{sourceFile.Name.EscapeMarkup()}[/]";
-                await CopyFileAsync(sourceFile, destinationPath, task, token);
+                long completedBytes = 0;
+                progress.Report((sourceFile.Length, 0,
+                    $"{operationName} file [green]{sourceFile.Name.EscapeMarkup()}[/]"));
+                await CopyFileAsync(sourceFile, destinationPath, token,
+                    (chunkCopied) =>
+                    {
+                        completedBytes += chunkCopied;
+                        progress.Report((sourceFile.Length, completedBytes, ""));
+                    });
             }
 
             return new ActionResponse(true,
-                $"[green]Successfully copied '{Path.GetFileName(sourcePath).EscapeMarkup()}'[/]");
+                $"[green]Successfully {operationName.ToLower()}ed '{Path.GetFileName(sourcePath).EscapeMarkup()}'[/]");
         }
         catch (OperationCanceledException)
         {
@@ -200,13 +213,21 @@ public abstract class ActionService
     private static long GetDirectorySize(DirectoryInfo dirInfo)
     {
         long size = 0;
-        size += dirInfo.GetFiles().Sum(fi => fi.Length);
-        size += dirInfo.GetDirectories().Sum(di => GetDirectorySize(di));
+        try
+        {
+            size += dirInfo.GetFiles().Sum(fi => fi.Length);
+            size += dirInfo.GetDirectories().Sum(di => GetDirectorySize(di));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            /* Skip inaccessible directories */
+        }
+
         return size;
     }
 
-    private static async Task CopyDirectoryRecursive(DirectoryInfo source, DirectoryInfo target, ProgressTask task,
-        CancellationToken token)
+    private static async Task CopyDirectoryRecursive(DirectoryInfo source, DirectoryInfo target,
+        CancellationToken token, Action<long> onBytesCopied)
     {
         token.ThrowIfCancellationRequested();
         Directory.CreateDirectory(target.FullName);
@@ -215,22 +236,22 @@ public abstract class ActionService
         {
             token.ThrowIfCancellationRequested();
             var targetFilePath = Path.Combine(target.FullName, fi.Name);
-            task.Description = $"Copying [green]{fi.Name.EscapeMarkup()}[/]";
-            await CopyFileAsync(fi, targetFilePath, task, token);
+            await CopyFileAsync(fi, targetFilePath, token, onBytesCopied);
         }
 
         foreach (var diSourceSubDir in source.GetDirectories())
         {
             token.ThrowIfCancellationRequested();
             var nextTargetSubDir = new DirectoryInfo(Path.Combine(target.FullName, diSourceSubDir.Name));
-            await CopyDirectoryRecursive(diSourceSubDir, nextTargetSubDir, task, token);
+            await CopyDirectoryRecursive(diSourceSubDir, nextTargetSubDir, token, onBytesCopied);
         }
     }
 
-    private static async Task CopyFileAsync(FileInfo sourceFile, string destFile, ProgressTask task,
-        CancellationToken token)
+    private static async Task CopyFileAsync(FileInfo sourceFile, string destFile, CancellationToken token,
+        Action<long> onProgress)
     {
-        const int bufferSize = 81920;
+        const int bufferSize = 81920; 
+
         await using var sourceStream = new FileStream(sourceFile.FullName, FileMode.Open, FileAccess.Read,
             FileShare.Read, bufferSize, true);
         await using var destinationStream =
@@ -242,7 +263,7 @@ public abstract class ActionService
         {
             token.ThrowIfCancellationRequested();
             await destinationStream.WriteAsync(buffer.AsMemory(0, bytesRead), token);
-            task.Increment(bytesRead);
+            onProgress(bytesRead);
         }
     }
 }

@@ -6,7 +6,7 @@ public class InputHandler(FileManager fileManager)
     {
         fileManager.ClearStatusMessage();
 
-        if (keyInfo.Key == ConsoleKey.Escape && fileManager.HasClipboardItem())
+        if (fileManager.CurrentMode == FileManager.InputMode.Normal && keyInfo.Key == ConsoleKey.Escape && fileManager.HasClipboardItem())
         {
             fileManager.ClearClipboard();
             return;
@@ -33,6 +33,9 @@ public class InputHandler(FileManager fileManager)
 
         switch (key)
         {
+            case ConsoleKey.Escape when fileManager.IsViewFiltered:
+                fileManager.ClearFilter();
+                return;
             case ConsoleKey.Q:
             case ConsoleKey.Escape when !fileManager.IsViewFiltered:
                 fileManager.RequestQuit();

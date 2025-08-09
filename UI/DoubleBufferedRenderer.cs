@@ -1,5 +1,6 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
+using System.Text;
 
 namespace termix.UI;
 
@@ -25,6 +26,12 @@ public class DoubleBufferedRenderer
         _console.Write(layout);
         var output = _writer.ToString();
         Console.SetCursorPosition(0, 0);
+
+        if (Console.OutputEncoding.CodePage != Encoding.UTF8.CodePage)
+        {
+            Console.OutputEncoding = new UTF8Encoding(false);
+        }
+
         Console.Write(output);
     }
 }

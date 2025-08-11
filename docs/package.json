@@ -9,7 +9,13 @@
     "docs:preview": "vitepress preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["termix", "documentation", "vitepress", "terminal", "file-navigator"],
+  "keywords": [
+    "termix",
+    "documentation",
+    "vitepress",
+    "terminal",
+    "file-navigator"
+  ],
   "author": "amrohan",
   "license": "MIT",
   "type": "module",

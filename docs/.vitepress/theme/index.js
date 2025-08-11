@@ -1,11 +1,13 @@
-import DefaultTheme from 'vitepress/theme'
-import Contributors from '../components/Contributors.vue'
-import './custom.css'
+import DefaultTheme from "vitepress/theme";
+import Contributors from "../components/Contributors.vue";
+import VideoPlayer from "../components/VideoPlayer.vue";
+
+import "./custom.css";
 
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
-    // Register global components
-    app.component('Contributors', Contributors)
-  }
-}
+    app.component("Contributors", Contributors);
+    app.component("VideoPlayer", VideoPlayer);
+  },
+};

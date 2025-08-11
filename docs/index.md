@@ -41,5 +41,4 @@ features:
 
 Termix is made possible by the contributions of amazing developers and the open-source community.
 
-
 <Contributors />

@@ -1,35 +1,38 @@
 <template>
   <div>
-    <div v-if="loading" class="loading">
-      Loading contributors...
-    </div>
-    
+    <div v-if="loading" class="loading">Loading contributors...</div>
+
     <div v-else-if="error" class="error">
       <p>Unable to load contributors at the moment.</p>
       <p>
-        <a href="https://github.com/amrohan/termix/graphs/contributors" target="_blank">
+        <a
+          href="https://github.com/amrohan/termix/graphs/contributors"
+          target="_blank"
+        >
           View contributors on GitHub →
         </a>
       </p>
     </div>
-    
+
     <div v-else class="contributors">
-      <div 
-        v-for="contributor in contributors" 
+      <div
+        v-for="contributor in contributors"
         :key="contributor.id"
         class="contributor"
         @click="openProfile(contributor.html_url)"
       >
-        <img 
-          :src="contributor.avatar_url" 
-          :alt="contributor.login" 
-          width="60" 
+        <img
+          :src="contributor.avatar_url"
+          :alt="contributor.login"
+          width="60"
           height="60"
         />
         <div class="contributor-info">
           <h4>{{ contributor.name || contributor.login }}</h4>
           <p class="username">@{{ contributor.login }}</p>
-          <p class="contributions">{{ contributor.contributions }} contributions</p>
+          <p class="contributions">
+            {{ contributor.contributions }} contributions
+          </p>
         </div>
       </div>
     </div>
@@ -37,56 +40,55 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from "vue";
 
-const contributors = ref([])
-const loading = ref(true)
-const error = ref(false)
+const contributors = ref([]);
+const loading = ref(true);
+const error = ref(false);
 
 const fetchContributors = async () => {
   try {
-    // GitHub API endpoint for repository contributors
-    // This endpoint provides: login, id, avatar_url, html_url, contributions, etc.
-    const response = await fetch('https://api.github.com/repos/amrohan/termix/contributors?per_page=100', {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        // Add User-Agent for better API compatibility
-        'User-Agent': 'Termix-Documentation-Site'
-      }
-    })
-    
+    const response = await fetch(
+      "https://api.github.com/repos/amrohan/termix/contributors?per_page=100",
+      {
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Termix-Documentation-Site",
+        },
+      },
+    );
+
     if (!response.ok) {
-      // Handle specific GitHub API errors
       if (response.status === 403) {
-        throw new Error('API rate limit exceeded. Please try again later.')
+        throw new Error("API rate limit exceeded. Please try again later.");
       } else if (response.status === 404) {
-        throw new Error('Repository not found.')
+        throw new Error("Repository not found.");
       } else {
-        throw new Error(`GitHub API error: ${response.status}`)
+        throw new Error(`GitHub API error: ${response.status}`);
       }
     }
-    
-    const data = await response.json()
-    
-    // Sort contributors by contribution count (descending)
-    const sortedContributors = data.sort((a, b) => b.contributions - a.contributions)
-    
-    contributors.value = sortedContributors
-    loading.value = false
+
+    const data = await response.json();
+
+    const sortedContributors = data.sort(
+      (a, b) => b.contributions - a.contributions,
+    );
+
+    contributors.value = sortedContributors;
+    loading.value = false;
   } catch (err) {
-    console.error('Error fetching contributors:', err)
-    error.value = true
-    loading.value = false
+    error.value = true;
+    loading.value = false;
   }
-}
+};
 
 const openProfile = (url) => {
-  window.open(url, '_blank')
-}
+  window.open(url, "_blank");
+};
 
 onMounted(() => {
-  fetchContributors()
-})
+  fetchContributors();
+});
 </script>
 
 <style scoped>

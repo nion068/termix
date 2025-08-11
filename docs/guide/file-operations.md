@@ -5,6 +5,7 @@ Termix provides powerful file and directory operations with visual feedback and 
 ## Overview
 
 All file operations in Termix are designed to be:
+
 - **Safe**: Confirmation prompts for destructive operations
 - **Informative**: Clear feedback and progress indicators
 - **Efficient**: Optimized for both small files and large directories
@@ -22,12 +23,12 @@ Press `A` to create new files or directories:
 
 ### Creation Rules
 
-| Input | Result | Description |
-|-------|--------|-------------|
-| `filename.txt` | File | Creates a text file |
-| `script` | `script.txt` | Auto-adds .txt extension |
-| `folder/` | Directory | Trailing slash creates directory |
-| `path/to/file.md` | Nested file | Creates directories as needed |
+| Input             | Result       | Description                      |
+| ----------------- | ------------ | -------------------------------- |
+| `filename.txt`    | File         | Creates a text file              |
+| `script`          | `script.txt` | Auto-adds .txt extension         |
+| `folder/`         | Directory    | Trailing slash creates directory |
+| `path/to/file.md` | Nested file  | Creates directories as needed    |
 
 ### Smart Path Creation
 
@@ -49,6 +50,8 @@ A → src/ → Enter
 # Create nested structure
 A → docs/guide/setup.md → Enter
 ```
+
+<VideoPlayer src="/videos/filecrud.mp4" />
 
 ## Renaming Files and Directories
 
@@ -94,7 +97,7 @@ Termix uses a clipboard-based system for copy and move operations:
 
 ### Move Files (`X`)
 
-1. Select the file or directory  
+1. Select the file or directory
 2. Press `X` to cut (move) to clipboard
 3. Navigate to the destination
 4. Press `P` to paste
@@ -110,11 +113,7 @@ Termix uses a clipboard-based system for copy and move operations:
 
 For large files and directories, Termix shows detailed progress:
 
-```
-Copying directory [project-files]
-████████████████████████████████ 75%
-Processing: src/components/Button.tsx
-```
+![Progress Image](/progress.png)
 
 - **Progress bar**: Visual indication of completion
 - **Current file**: Shows which file is being processed
@@ -124,12 +123,12 @@ Processing: src/components/Button.tsx
 
 When pasting, Termix handles various scenarios:
 
-| Scenario | Behavior |
-|----------|----------|
-| **Same location (copy)** | Creates copy with different name |
+| Scenario                 | Behavior                                |
+| ------------------------ | --------------------------------------- |
+| **Same location (copy)** | Creates copy with different name        |
 | **Same location (move)** | Shows "source and destination are same" |
-| **Name conflict** | Shows error, suggests resolution |
-| **Cross-drive move** | Automatically converts to copy + delete |
+| **Name conflict**        | Shows error, suggests resolution        |
+| **Cross-drive move**     | Automatically converts to copy + delete |
 
 ## Delete Operations
 
@@ -192,13 +191,13 @@ For directories with many files:
 
 ### Common Error Scenarios
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| **Permission denied** | Insufficient file system permissions | Check file/directory permissions |
-| **File in use** | Another process has file locked | Close other applications using the file |
-| **Disk full** | Not enough space for operation | Free up disk space or choose different location |
-| **Invalid name** | Name contains illegal characters | Use valid filename characters |
-| **Path too long** | Exceeds filesystem limits | Use shorter names or shallower directory structure |
+| Error                 | Cause                                | Resolution                                         |
+| --------------------- | ------------------------------------ | -------------------------------------------------- |
+| **Permission denied** | Insufficient file system permissions | Check file/directory permissions                   |
+| **File in use**       | Another process has file locked      | Close other applications using the file            |
+| **Disk full**         | Not enough space for operation       | Free up disk space or choose different location    |
+| **Invalid name**      | Name contains illegal characters     | Use valid filename characters                      |
+| **Path too long**     | Exceeds filesystem limits            | Use shorter names or shallower directory structure |
 
 ### Error Recovery
 
@@ -254,15 +253,15 @@ Termix uses various visual cues:
 
 ## Keyboard Shortcuts Reference
 
-| Key | Operation | Description |
-|-----|-----------|-------------|
-| `A` | Add | Create new file or directory |
-| `R` | Rename | Rename selected item |
-| `C` | Copy | Copy to clipboard |
-| `X` | Move/Cut | Cut to clipboard |
-| `P` | Paste | Paste from clipboard |
-| `D` | Delete | Delete with confirmation |
-| `Esc` | Cancel | Cancel current operation or clear clipboard |
+| Key   | Operation | Description                                 |
+| ----- | --------- | ------------------------------------------- |
+| `A`   | Add       | Create new file or directory                |
+| `R`   | Rename    | Rename selected item                        |
+| `C`   | Copy      | Copy to clipboard                           |
+| `X`   | Move/Cut  | Cut to clipboard                            |
+| `P`   | Paste     | Paste from clipboard                        |
+| `D`   | Delete    | Delete with confirmation                    |
+| `Esc` | Cancel    | Cancel current operation or clear clipboard |
 
 ## Next Steps
 

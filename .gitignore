@@ -82,3 +82,15 @@ _ReSharper*/
 *.vs/
 output
 nupkg
+
+# Node.js
+node_modules/
+package-lock.json
+
+# VitePress
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# macOS
+.DS_Store
+docs/.vitepress/dist

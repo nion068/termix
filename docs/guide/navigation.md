@@ -6,20 +6,7 @@ Master Termix's navigation system to move through your file system quickly and e
 
 Termix uses a clean two-pane layout:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ /Users/username/projects/my-project                         │
-├─────────────────────┬───────────────────────────────────────┤
-│ [📁] ..             │                                       │
-│ [📁] src            │        File Preview Pane              │
-│ [📁] tests          │                                       │
-│ [📄] README.md      │   Shows content of selected file     │
-│ [📄] package.json   │                                       │
-│ [📄] .gitignore     │                                       │
-├─────────────────────┴───────────────────────────────────────┤
-│ Status bar with shortcuts and current mode                  │
-└─────────────────────────────────────────────────────────────┘
-```
+![navigation icons](/navigation.png)
 
 - **Left pane**: File and directory listing with icons
 - **Right pane**: Preview of the currently selected item
@@ -30,23 +17,23 @@ Termix uses a clean two-pane layout:
 
 ### Vertical Navigation
 
-| Key | Action | Description |
-|-----|--------|-------------|
-| `↑` | Move up | Select previous item in list |
-| `↓` | Move down | Select next item in list |
-| `J` | Move up (Vim) | Vim-style upward movement |
-| `K` | Move down (Vim) | Vim-style downward movement |
-| `Home` | Jump to top | Select first item in current directory |
-| `End` | Jump to bottom | Select last item in current directory |
+| Key    | Action          | Description                            |
+| ------ | --------------- | -------------------------------------- |
+| `↑`    | Move up         | Select previous item in list           |
+| `↓`    | Move down       | Select next item in list               |
+| `J`    | Move up (Vim)   | Vim-style upward movement              |
+| `K`    | Move down (Vim) | Vim-style downward movement            |
+| `Home` | Jump to top     | Select first item in current directory |
+| `End`  | Jump to bottom  | Select last item in current directory  |
 
 ### Directory Traversal
 
-| Key | Action | Description |
-|-----|--------|-------------|
-| `Enter` | Open/Enter | Open file or enter selected directory |
-| `L` | Open/Enter | Alternative key for opening |
-| `Backspace` | Go up | Move to parent directory |
-| `H` | Go up | Vim-style parent directory navigation |
+| Key         | Action     | Description                           |
+| ----------- | ---------- | ------------------------------------- |
+| `Enter`     | Open/Enter | Open file or enter selected directory |
+| `L`         | Open/Enter | Alternative key for opening           |
+| `Backspace` | Go up      | Move to parent directory              |
+| `H`         | Go up      | Vim-style parent directory navigation |
 
 ## Advanced Navigation Features
 
@@ -80,12 +67,12 @@ The `..` entry at the top of each directory listing provides quick access to the
 
 When previewing large files, you can scroll through the content:
 
-| Key | Action | Description |
-|-----|--------|-------------|
-| `Alt + ↑` | Scroll up | Move preview content up |
-| `Alt + ↓` | Scroll down | Move preview content down |
-| `Alt + ←` | Scroll left | Move preview content left (for wide content) |
-| `Alt + →` | Scroll right | Move preview content right |
+| Key       | Action       | Description                                  |
+| --------- | ------------ | -------------------------------------------- |
+| `Alt + ↑` | Scroll up    | Move preview content up                      |
+| `Alt + ↓` | Scroll down  | Move preview content down                    |
+| `Alt + ←` | Scroll left  | Move preview content left (for wide content) |
+| `Alt + →` | Scroll right | Move preview content right                   |
 
 ### Preview Reset
 

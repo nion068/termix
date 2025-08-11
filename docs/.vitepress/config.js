@@ -1,106 +1,105 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: 'Termix',
-  description: 'A modern, high-performance file navigator for your terminal',
-  base: '/',
+  title: "Termix",
+  description: "A modern, high-performance file navigator for your terminal",
+  base: "/",
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
-    ['meta', { name: 'theme-color', content: '#3c82f6' }]
+    ["link", { rel: "icon", href: "/favicon.ico" }],
+    ["meta", { name: "theme-color", content: "#3c82f6" }],
   ],
   themeConfig: {
-    logo: '/logo.svg',
-    siteTitle: 'Termix',
+    logo: "/logo.svg",
+    siteTitle: "Termix",
     nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Guide', link: '/guide/introduction' },
-      { text: 'API Reference', link: '/api/overview' },
-      { text: 'GitHub', link: 'https://github.com/amrohan/termix' }
+      { text: "Home", link: "/" },
+      { text: "Guide", link: "/guide/introduction" },
+      { text: "API Reference", link: "/api/overview" },
+      { text: "GitHub", link: "https://github.com/amrohan/termix" },
     ],
     sidebar: {
-      '/guide/': [
+      "/guide/": [
         {
-          text: 'Getting Started',
+          text: "Getting Started",
           items: [
-            { text: 'Introduction', link: '/guide/introduction' },
-            { text: 'Installation', link: '/guide/installation' },
-            { text: 'Quick Start', link: '/guide/quick-start' }
-          ]
+            { text: "Introduction", link: "/guide/introduction" },
+            { text: "Installation", link: "/guide/installation" },
+            { text: "Quick Start", link: "/guide/quick-start" },
+          ],
         },
         {
-          text: 'User Guide',
+          text: "User Guide",
           items: [
-            { text: 'Navigation', link: '/guide/navigation' },
-            { text: 'File Operations', link: '/guide/file-operations' },
-            { text: 'Search & Filter', link: '/guide/search-filter' },
-            { text: 'Keyboard Shortcuts', link: '/guide/keyboard-shortcuts' }
-          ]
+            { text: "Navigation", link: "/guide/navigation" },
+            { text: "File Operations", link: "/guide/file-operations" },
+            { text: "Search & Filter", link: "/guide/search-filter" },
+            { text: "Keyboard Shortcuts", link: "/guide/keyboard-shortcuts" },
+          ],
         },
         {
-          text: 'Advanced',
+          text: "Advanced",
           items: [
-            { text: 'Configuration', link: '/guide/configuration' },
-            { text: 'Tips & Tricks', link: '/guide/tips-tricks' },
-            { text: 'Troubleshooting', link: '/guide/troubleshooting' }
-          ]
-        }
+            { text: "Configuration", link: "/guide/configuration" },
+            { text: "Tips & Tricks", link: "/guide/tips-tricks" },
+            { text: "Troubleshooting", link: "/guide/troubleshooting" },
+          ],
+        },
       ],
-      '/api/': [
+      "/api/": [
         {
-          text: 'API Reference',
+          text: "API Reference",
           items: [
-            { text: 'Overview', link: '/api/overview' },
-            { text: 'ActionService', link: '/api/action-service' },
-            { text: 'FileSystemService', link: '/api/filesystem-service' },
-            { text: 'File Manager', link: '/api/file-manager' }
-          ]
+            { text: "Overview", link: "/api/overview" },
+            { text: "ActionService", link: "/api/action-service" },
+            { text: "FileSystemService", link: "/api/filesystem-service" },
+            { text: "File Manager", link: "/api/file-manager" },
+          ],
         },
         {
-          text: 'Architecture',
+          text: "Architecture",
           items: [
-            { text: 'Core Components', link: '/api/core-components' },
-            { text: 'Services', link: '/api/services' },
-            { text: 'UI Layer', link: '/api/ui-layer' }
-          ]
-        }
-      ]
+            { text: "Core Components", link: "/api/core-components" },
+            { text: "Services", link: "/api/services" },
+            { text: "UI Layer", link: "/api/ui-layer" },
+          ],
+        },
+      ],
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/amrohan/termix' }
+      { icon: "github", link: "https://github.com/amrohan/termix" },
     ],
     footer: {
-      message: 'Released under the MIT License',
-      copyright: 'Copyright © 2025 amrohan'
+      message: "Released under the MIT License",
+      copyright: "Copyright © 2025 amrohan",
     },
     editLink: {
-      pattern: 'https://github.com/amrohan/termix/edit/main/docs/:path',
-      text: 'Edit this page on GitHub'
+      pattern: "https://github.com/amrohan/termix/edit/main/docs/:path",
+      text: "Edit this page on GitHub",
     },
     search: {
-      provider: 'local'
+      provider: "local",
     },
     lastUpdated: {
-      text: 'Updated at',
+      text: "Updated at",
       formatOptions: {
-        dateStyle: 'short',
-        timeStyle: 'medium'
-      }
-    }
+        dateStyle: "short",
+        timeStyle: "medium",
+      },
+    },
   },
   markdown: {
     theme: {
-      light: 'github-light',
-      dark: 'github-dark'
+      light: "github-light",
+      dark: "github-dark",
     },
-    lineNumbers: true,
     codeTransformers: [
       {
         preprocess(code, options) {
-          if (options.lang === 'csharp' || options.lang === 'cs') {
-            return code
+          if (options.lang === "csharp" || options.lang === "cs") {
+            return code;
           }
-        }
-      }
-    ]
-  }
-})
+        },
+      },
+    ],
+  },
+});

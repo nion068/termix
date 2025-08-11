@@ -5,6 +5,7 @@ Termix's powerful search and filtering system allows you to find files instantly
 ## Overview
 
 Termix search is designed to be:
+
 - **Instant**: Real-time results as you type
 - **Recursive**: Searches through all subdirectories
 - **Smart**: Respects `.gitignore` and ignore patterns
@@ -22,6 +23,8 @@ Press `S` to enter search mode:
 4. Press `Esc` to finish searching and navigate results
 
 ### Search Example
+
+<VideoPlayer src="/videos/search.mp4" />
 
 ```bash
 # Search for all JavaScript files
@@ -61,7 +64,7 @@ Search is automatically case-insensitive:
 ```bash
 # These searches are equivalent
 S → README → Esc
-S → readme → Esc  
+S → readme → Esc
 S → ReAdMe → Esc
 ```
 
@@ -120,7 +123,7 @@ While Termix doesn't support complex query syntax, you can search for multiple t
 # Find user-related controller files
 S → usercontroller → Esc
 
-# Find configuration JSON files  
+# Find configuration JSON files
 S → config.json → Esc
 ```
 
@@ -142,7 +145,7 @@ Termix has built-in ignore patterns for common build and cache directories:
 ```
 node_modules/     # Node.js dependencies
 bin/              # Build outputs
-obj/              # Build intermediates  
+obj/              # Build intermediates
 .git/             # Git repository data
 __pycache__/      # Python cache
 .DS_Store         # macOS system files
@@ -152,6 +155,7 @@ Thumbs.db         # Windows thumbnails
 ### Ignore Service Benefits
 
 This smart filtering means your searches return only relevant files:
+
 - **Faster results**: Fewer files to process
 - **Cleaner output**: No noise from build artifacts
 - **Better focus**: See only source files and documents
@@ -176,6 +180,7 @@ Termix optimizes search performance:
 ### Large Directory Handling
 
 For very large directory trees:
+
 - **Responsive interface**: UI remains responsive during search
 - **Cancellation**: Starting a new search cancels previous ones
 - **Debouncing**: Rapid typing doesn't trigger excessive searches
@@ -186,12 +191,12 @@ For very large directory trees:
 
 Once you've applied a filter (pressed `Esc` after searching):
 
-| Key | Action | Description |
-|-----|--------|-------------|
-| `↑` / `↓` | Navigate | Move through filtered results |
-| `J` / `K` | Navigate | Vim-style movement |
-| `Enter` / `L` | Open | Open selected file |
-| `H` / `Backspace` | Up | Navigate to parent directory |
+| Key               | Action   | Description                   |
+| ----------------- | -------- | ----------------------------- |
+| `↑` / `↓`         | Navigate | Move through filtered results |
+| `J` / `K`         | Navigate | Vim-style movement            |
+| `Enter` / `L`     | Open     | Open selected file            |
+| `H` / `Backspace` | Up       | Navigate to parent directory  |
 
 ### Maintaining Search Context
 
@@ -229,7 +234,7 @@ S → .spec. → Esc
 
 ### Configuration Management
 
-```bash  
+```bash
 # Find configuration files
 S → config → Esc
 
@@ -306,14 +311,14 @@ While Termix doesn't persist search history between sessions:
 
 ## Keyboard Shortcuts Reference
 
-| Key | Mode | Action |
-|-----|------|--------|
-| `S` | Normal | Start search |
-| `Esc` | Search | Apply filter and enter navigation mode |
-| `Esc` | Filtered | Clear filter and show all files |
-| `B` | Any | Return to search results (when available) |
-| Character keys | Search | Add to search query |
-| `Backspace` | Search | Remove from search query |
+| Key            | Mode     | Action                                    |
+| -------------- | -------- | ----------------------------------------- |
+| `S`            | Normal   | Start search                              |
+| `Esc`          | Search   | Apply filter and enter navigation mode    |
+| `Esc`          | Filtered | Clear filter and show all files           |
+| `B`            | Any      | Return to search results (when available) |
+| Character keys | Search   | Add to search query                       |
+| `Backspace`    | Search   | Remove from search query                  |
 
 ## Performance Tips
 

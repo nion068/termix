@@ -1,180 +1,157 @@
 # Installation
 
-This guide will walk you through installing Termix on your system. Termix is distributed as a .NET Global Tool, making installation quick and easy across all supported platforms.
+This guide explains how to install **Termix** on your system.  
+We offer multiple installation methods so you can choose the one that best fits your setup.
 
 ## Prerequisites
 
 Before installing Termix, ensure you have:
 
-- **.NET 9 SDK** or later installed on your system
-- A terminal application (Command Prompt, PowerShell, Terminal.app, etc.)
-- Optional: A [Nerd Font](https://www.nerdfonts.com/) for enhanced icon support
+- A terminal application (e.g., Windows Terminal, iTerm2, Warp, Kitty, GNOME Terminal)
+- **(Optional, but highly recommended)** A [Nerd Font](https://www.nerdfonts.com/) for enhanced icon support
 
-### Installing .NET 9
+## Install via Script (All Platforms) <Badge type="tip" text="Recommended"/>
 
-If you don't have .NET 9 installed, download it from the [official .NET website](https://dotnet.microsoft.com/download/dotnet/9.0).
+Termix provides script-based installers for **macOS**, **Linux**, and **Windows**.
 
-To verify your .NET installation:
+### macOS / Linux
+
+Requirements:
+
+* `curl`
+* `unzip` or `tar`
+* `jq`
 
 ```bash
-dotnet --version
+# Install or update to the latest version
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash
+
+# Install a specific version
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s v1.5.0
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s uninstall
 ```
 
-You should see version 9.0 or higher.
+### Windows (PowerShell)
 
-## Option 1: Install from NuGet (Recommended)
+Requirements:
 
-The easiest way to install Termix is as a .NET Global Tool from NuGet:
+* PowerShell 5.1 or later (PowerShell Core 7+ recommended)
+
+```powershell
+# Install or update to latest
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1")
+
+# Install specific version
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Tag v1.5.0
+
+# Uninstall
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Uninstall
+```
+
+## Install as a .NET Global Tool
+
+Requires:
+
+* **.NET 9 SDK** or later
 
 ```bash
 dotnet tool install --global termix
 ```
 
-This command will:
-- Download the latest version of Termix from NuGet
-- Install it globally on your system
-- Add the `termix` command to your PATH
-
-### Launching Termix
-
-Once installed, you can launch Termix from any directory:
+Run Termix:
 
 ```bash
 termix
 ```
 
-## Option 2: Install from Source
-
-If you want to build Termix from source or contribute to development:
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/amrohan/termix.git
-cd termix
-```
-
-### 2. Build and Pack
-
-```bash
-dotnet pack
-```
-
-### 3. Install Locally
-
-```bash
-dotnet tool install --global --add-source ./nupkg termix
-```
-
-## Updating Termix
-
-To update to the latest version:
+Update:
 
 ```bash
 dotnet tool update --global termix
 ```
 
-## Uninstalling Termix
-
-To remove Termix from your system:
+Uninstall:
 
 ```bash
 dotnet tool uninstall --global termix
 ```
 
-## Platform-Specific Notes
+## Install from Source
 
-### Windows
+```bash
+# Clone repository
+git clone https://github.com/amrohan/termix.git
+cd termix
 
-Termix works great on Windows with:
-- **Windows Terminal** (recommended)
-- **PowerShell** 
-- **Command Prompt**
+# Build and install locally
+dotnet pack
+dotnet tool install --global --add-source ./nupkg termix
+```
 
-For the best experience, enable Unicode support in your terminal.
+---
 
-### macOS
+## Font Setup (Recommended)
 
-On macOS, Termix works with:
-- **Terminal.app** (built-in)
-- **iTerm2** (recommended for enhanced features)
-- **Other terminal emulators**
+For icons, install a [Nerd Font](https://www.nerdfonts.com/):
 
-### Linux
+**Recommended:**
 
-Termix is compatible with most Linux terminal emulators:
-- **GNOME Terminal**
-- **Konsole**
-- **Alacritty**
-- **Kitty**
-- And many more
+* FiraCode Nerd Font
+* JetBrains Mono Nerd Font
+* Cascadia Code Nerd Font
 
-## Font Setup (Optional)
-
-For the best visual experience with file type icons, install a [Nerd Font](https://www.nerdfonts.com/):
-
-### Recommended Fonts
-- **FiraCode Nerd Font**
-- **JetBrains Mono Nerd Font** 
-- **Cascadia Code Nerd Font**
-
-### Installation Steps
-1. Download your preferred Nerd Font from [nerdfonts.com](https://www.nerdfonts.com/)
-2. Install the font on your system
-3. Configure your terminal to use the installed font
+1. Download from [nerdfonts.com](https://www.nerdfonts.com/)
+2. Install on your system
+3. Set it as your terminal font
 
 ::: tip Icon Fallback
-Don't worry if you can't install Nerd Fonts! Termix automatically falls back to ASCII characters, ensuring full functionality regardless of your font setup.
+If Nerd Fonts aren’t installed, Termix falls back to ASCII characters.
 :::
 
-## Command Line Options
 
-Termix supports several command line options:
+## Command-Line Options
 
 ```bash
 # Launch normally with icons
 termix
 
-# Launch without icons (ASCII mode)
+# Launch without icons
 termix --no-icons
 ```
 
 ## Troubleshooting
 
-### "Command not found" Error
+### Command Not Found
 
-If you get a "command not found" error after installation:
+* Ensure .NET tools are in `PATH`
+* Restart your terminal
+* Verify with:
 
-1. **Check if .NET tools are in PATH**: The .NET global tools directory needs to be in your system PATH
-2. **Restart your terminal**: Sometimes PATH changes require a terminal restart
-3. **Verify installation**: Run `dotnet tool list --global` to see if Termix is listed
+```bash
+dotnet tool list --global
+```
 
 ### .NET SDK Not Found
 
-If you get a .NET SDK error:
-
-1. **Install .NET 9**: Download from [dotnet.microsoft.com](https://dotnet.microsoft.com/)
-2. **Verify installation**: Run `dotnet --version`
-3. **Check PATH**: Ensure the `dotnet` command is available
+* Install .NET 9 from [dotnet.microsoft.com](https://dotnet.microsoft.com/)
+* Check version with `dotnet --version`
 
 ### Permission Errors
-
-On some systems, you might need elevated permissions:
 
 ```bash
 # Linux/macOS
 sudo dotnet tool install --global termix
 
-# Windows (run as Administrator)
+# Windows (Run as Administrator)
 dotnet tool install --global termix
 ```
 
-## Next Steps
+::: info Version Info
+**Current stable version:** 1.5.1
 
-Now that Termix is installed, check out the [Quick Start Guide](./quick-start.md) to learn the basics, or dive into the [Navigation Guide](./navigation.md) to master file navigation.
+**Minimum .NET:** 9.0
 
-::: info Version Information
-Current stable version: **1.5.0**  
-Minimum .NET version: **9.0**  
-Supported platforms: **Windows, macOS, Linux**
+**Platforms:** Windows, macOS, Linux
 :::

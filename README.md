@@ -44,9 +44,53 @@ https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
 
 ### Prerequisites
 
-- **.NET 9 SDK** or later installed on your system
 
-### Option 1: Install as a .NET Global Tool (All Platforms)
+### Option 1: Install via Script (All Platforms)
+
+#### Prerequisites
+Before using the script-based installers, make sure you have:
+
+- **macOS / Linux**:
+    - `curl`
+    - `unzip` (or `tar` for `.tar.gz` archives)
+    - `jq`
+- **Windows**:
+    - PowerShell 5.1 or later (PowerShell Core 7+ recommended)
+
+#### macOS / Linux
+
+You can install or update Termix directly via our official installer:
+
+```bash
+# Install or update to latest
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash
+
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s v1.5.0
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s uninstall
+```
+
+#### Windows (PowerShell)
+
+Open PowerShell and run:
+
+```powershell
+# Install or update to latest
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1")
+
+# Install specific version
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Tag v1.5.0
+
+# Uninstall
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Uninstall
+```
+
+
+### Option 2: Install as a .NET Global Tool (All Platforms)
+
+- **.NET 9 SDK** or later installed on your system
 
 ```bash
 dotnet tool install --global termix
@@ -56,6 +100,18 @@ Launch the application by running:
 
 ```bash
 termix
+```
+
+Updating Termix
+
+```bash
+dotnet tool update --global termix
+```
+
+Uninstalling Termix
+
+```bash
+dotnet tool uninstall --global termix
 ```
 
 ### Option 2: Install from Source
@@ -68,19 +124,7 @@ cd termix
 # Build and install locally
 dotnet pack
 dotnet tool install --global --add-source ./nupkg termix
-```
-
-### Updating Termix
-
-```bash
-dotnet tool update --global termix
-```
-
-### Uninstalling Termix
-
-```bash
-dotnet tool uninstall --global termix
-```
+````
 
 ##  Keyboard Shortcuts
 

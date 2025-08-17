@@ -42,9 +42,6 @@ https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
 
 ##  Installation
 
-### Prerequisites
-
-
 ### Option 1: Install via Script (All Platforms)
 
 #### Prerequisites
@@ -114,7 +111,7 @@ Uninstalling Termix
 dotnet tool uninstall --global termix
 ```
 
-### Option 2: Install from Source
+### Option 3: Install from Source
 
 ```bash
 # Clone the repository

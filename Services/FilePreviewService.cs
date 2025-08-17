@@ -7,7 +7,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace termix.Services;
 
-public class FilePreviewService
+public class FilePreviewService(IconProvider iconProvider)
 {
     private static readonly string[] SourceArray = [".jpg", ".jpeg", ".png", ".gif", ".bmp"];
     private readonly CustomSyntaxHighlighter _highlighter = new();
@@ -15,12 +15,21 @@ public class FilePreviewService
 
     public IRenderable GetPreview(string? filePath, int verticalOffset, int horizontalOffset)
     {
-        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        string header;
+
+        if (string.IsNullOrEmpty(filePath) || (!File.Exists(filePath) && !Directory.Exists(filePath)))
             return new Panel(Align.Center(new Text("Select a file to preview"), VerticalAlignment.Middle))
                 .Expand().Border(BoxBorder.Rounded).Header("[grey]Preview[/]");
 
+        if (Directory.Exists(filePath))
+        {
+            var directoryInfo = new DirectoryInfo(filePath);
+            header = $"[white]Preview (Directory):[/] [aqua]{directoryInfo.Name.EscapeMarkup()}[/]";
+            return RenderDirectoryPreview(filePath, header);
+        }
+
         var fileInfo = new FileInfo(filePath);
-        var header = $"[white]Preview (Scroll: Alt+Arrows):[/] [aqua]{fileInfo.Name.EscapeMarkup()}[/]";
+        header = $"[white]Preview (Scroll: Alt+Arrows):[/] [aqua]{fileInfo.Name.EscapeMarkup()}[/]";
 
         try
         {
@@ -40,7 +49,8 @@ public class FilePreviewService
             var visibleLines = allLines
                 .Skip(verticalOffset)
                 .Take(textPreviewHeight)
-                .Select(line => line.Length > horizontalOffset ? line[horizontalOffset..].Replace("\t", TabReplacement) : "")
+                .Select(line =>
+                    line.Length > horizontalOffset ? line[horizontalOffset..].Replace("\t", TabReplacement) : "")
                 .ToArray();
 
             IRenderable content = visibleLines.Length == 0
@@ -59,11 +69,11 @@ public class FilePreviewService
                 .Header(header).Expand().Border(BoxBorder.Rounded);
         }
     }
-    
+
     private static IRenderable RenderImageWithMaximumRefinement(string filePath, string header)
     {
         using var image = Image.Load<Rgba32>(filePath);
-        
+
         const int horizontalFactor = 3;
         const int verticalFactor = 3;
 
@@ -73,7 +83,7 @@ public class FilePreviewService
         var targetWidth = consoleWidth * horizontalFactor;
         var targetHeight = consoleHeight * 2 * verticalFactor;
 
-        image.Mutate(ctx => 
+        image.Mutate(ctx =>
         {
             ctx.Resize(new ResizeOptions
             {
@@ -99,25 +109,66 @@ public class FilePreviewService
                     for (var offsetX = 0; offsetX < horizontalFactor; offsetX++)
                     {
                         var pTop = image[x + offsetX, y + offsetY];
-                        topR += pTop.R; topG += pTop.G; topB += pTop.B;
-                        
+                        topR += pTop.R;
+                        topG += pTop.G;
+                        topB += pTop.B;
+
                         var pBot = image[x + offsetX, y + offsetY + verticalFactor];
-                        botR += pBot.R; botG += pBot.G; botB += pBot.B;
+                        botR += pBot.R;
+                        botG += pBot.G;
+                        botB += pBot.B;
                     }
                 }
 
-                var upperColor = new Rgba32((byte)(topR / sampleArea), (byte)(topG / sampleArea), (byte)(topB / sampleArea));
-                var lowerColor = new Rgba32((byte)(botR / sampleArea), (byte)(botG / sampleArea), (byte)(botB / sampleArea));
-                
-                sb.Append($"[rgb({lowerColor.R},{lowerColor.G},{lowerColor.B}) on rgb({upperColor.R},{upperColor.G},{upperColor.B})]▄[/]");
+                var upperColor = new Rgba32((byte)(topR / sampleArea), (byte)(topG / sampleArea),
+                    (byte)(topB / sampleArea));
+                var lowerColor = new Rgba32((byte)(botR / sampleArea), (byte)(botG / sampleArea),
+                    (byte)(botB / sampleArea));
+
+                sb.Append(
+                    $"[rgb({lowerColor.R},{lowerColor.G},{lowerColor.B}) on rgb({upperColor.R},{upperColor.G},{upperColor.B})]▄[/]");
             }
+
             sb.AppendLine();
         }
-        
+
         return new Panel(Align.Center(new Markup(sb.ToString()), VerticalAlignment.Middle))
             .Header(header)
             .Expand()
             .Border(BoxBorder.Rounded);
+    }
+
+    private IRenderable RenderDirectoryPreview(string directoryPath, string header)
+    {
+        try
+        {
+            var items = FileSystemService.GetDirectoryContents(directoryPath)
+                .Where(item => !item.IsParentDirectory)
+                .Take(Console.WindowHeight - 14)
+                .ToList();
+
+            if (items.Count == 0)
+            {
+                return new Panel(Align.Center(new Text("[grey]-- Empty Directory --[/]"), VerticalAlignment.Middle))
+                    .Header(header).Expand().Border(BoxBorder.Rounded);
+            }
+
+            var tree = new Tree($"[aqua bold]{new DirectoryInfo(directoryPath).Name.EscapeMarkup()}[/]");
+            foreach (var nodeText in from item in items
+                     let icon = iconProvider.GetIcon(item)
+                     select $"{icon} {item.Name.EscapeMarkup()}")
+            {
+                tree.AddNode(nodeText);
+            }
+
+            return new Panel(tree).Header(header).Expand().Border(BoxBorder.Rounded);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = $"[red]Error reading directory:[/] {ex.Message.EscapeMarkup()}";
+            return new Panel(Align.Center(new Text(errorMessage), VerticalAlignment.Middle))
+                .Header(header).Expand().Border(BoxBorder.Rounded);
+        }
     }
 
     private static bool IsImageFile(string extension)

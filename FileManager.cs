@@ -10,11 +10,17 @@ namespace termix
     {
         public enum InputMode
         {
-            Normal, Add, Rename, DeleteConfirm, Filter, FilteredNavigation, QuitConfirm
+            Normal,
+            Add,
+            Rename,
+            DeleteConfirm,
+            Filter,
+            FilteredNavigation,
+            QuitConfirm
         }
-        
+
         private readonly DoubleBufferedRenderer _doubleBuffer = new();
-        private readonly FilePreviewService _filePreviewService = new();
+        private readonly FilePreviewService _filePreviewService;
         private readonly InputHandler _inputHandler;
         private readonly Stack<string> _navigationStack = new();
         private readonly FileManagerRenderer _renderer;
@@ -47,6 +53,7 @@ namespace termix
         {
             var iconProvider = new IconProvider(useIcons);
             _renderer = new FileManagerRenderer(iconProvider);
+            _filePreviewService = new FilePreviewService(iconProvider);
             _inputHandler = new InputHandler(this);
         }
 
@@ -64,7 +71,8 @@ namespace termix
                 {
                     _needsRedraw = false;
                     var footerContent = CreateFooterRenderable();
-                    var layout = _renderer.GetLayout(_currentPath, _currentItems, _selectedIndex, _currentPreview, _viewOffset, footerContent);
+                    var layout = _renderer.GetLayout(_currentPath, _currentItems, _selectedIndex, _currentPreview,
+                        _viewOffset, footerContent);
                     _doubleBuffer.Render(layout);
                 }
 
@@ -91,7 +99,8 @@ namespace termix
         {
             if (_isOperationInProgress)
             {
-                var grid = new Grid().AddColumns(new GridColumn().NoWrap(), new GridColumn().PadLeft(1), new GridColumn().PadLeft(1));
+                var grid = new Grid().AddColumns(new GridColumn().NoWrap(), new GridColumn().PadLeft(1),
+                    new GridColumn().PadLeft(1));
                 grid.AddRow(
                     new Markup(_progressTaskDescription ?? "Processing..."),
                     new CustomProgressBar { Value = _progressValue, Width = 30 },
@@ -112,7 +121,8 @@ namespace termix
             if (_clipboard != null)
             {
                 var mode = _clipboard.Mode == ClipboardMode.Copy ? "Copy" : "Move";
-                content = new Markup($"[grey]Clipboard ({mode}):[/] [yellow]{_clipboard.Item.Name.EscapeMarkup()}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
+                content = new Markup(
+                    $"[grey]Clipboard ({mode}):[/] [yellow]{_clipboard.Item.Name.EscapeMarkup()}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
             }
             else
             {
@@ -127,19 +137,23 @@ namespace termix
             switch (CurrentMode)
             {
                 case InputMode.FilteredNavigation:
-                    return "[grey]Use[/] [cyan]B[/] [grey]to return to search results[/] | [grey]Currently browsing from a search result.[/]";
+                    return
+                        "[grey]Use[/] [cyan]B[/] [grey]to return to search results[/] | [grey]Currently browsing from a search result.[/]";
                 case InputMode.Normal when IsViewFiltered:
-                    return $"[grey]Results for '[yellow]{_inputText.EscapeMarkup()}[/]'. Press [cyan]Esc[/] to clear, or [cyan]S[/] for new search.[/]";
+                    return
+                        $"[grey]Results for '[yellow]{_inputText.EscapeMarkup()}[/]'. Press [cyan]Esc[/] to clear, or [cyan]S[/] for new search.[/]";
                 case InputMode.Filter:
                     var searchIndicator = _isDeepSearchRunning ? "[grey](Searching...)[/]" : "";
-                    return $"{_promptText.EscapeMarkup()}{searchIndicator} [yellow]{_inputText.EscapeMarkup()}[/][grey]█[/] | [grey]Press[/] [cyan]Esc[/] [grey]to navigate results[/]";
+                    return
+                        $"{_promptText.EscapeMarkup()}{searchIndicator} [yellow]{_inputText.EscapeMarkup()}[/][grey]█[/] | [grey]Press[/] [cyan]Esc[/] [grey]to navigate results[/]";
                 case InputMode.Add or InputMode.Rename:
                     return $"{_promptText.EscapeMarkup()}[yellow]{_inputText.EscapeMarkup()}[/][grey]█[/]";
                 case InputMode.DeleteConfirm or InputMode.QuitConfirm:
                     return _promptText;
                 default:
-                    return "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]C[/] Copy | [cyan]X[/] Move | [cyan]P[/] Paste " +
-                           "| [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]";
+                    return
+                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]C[/] Copy | [cyan]X[/] Move | [cyan]P[/] Paste " +
+                        "| [cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]";
             }
         }
 
@@ -209,7 +223,8 @@ namespace termix
             else
             {
                 _addBasePath = _currentPath;
-                var currentFolderName = Path.GetFileName(Path.GetFullPath(_currentPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                var currentFolderName = Path.GetFileName(Path.GetFullPath(_currentPath)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                 if (string.IsNullOrEmpty(currentFolderName)) currentFolderName = _currentPath;
                 _promptText = $"Create in [{currentFolderName.EscapeMarkup()}]: ";
             }
@@ -251,7 +266,7 @@ namespace termix
             _statusMessage = $"[yellow]{item.Name.EscapeMarkup()}[/] marked for move.";
             SetNeedsRedraw();
         }
-        
+
         public void BeginPaste()
         {
             if (_clipboard == null)
@@ -272,7 +287,9 @@ namespace termix
             var destPath = Path.Combine(destinationBasePath, _clipboard.Item.Name);
 
             if (sourcePath.Equals(destPath, StringComparison.OrdinalIgnoreCase) ||
-                (Directory.GetParent(sourcePath)?.FullName.Equals(destinationBasePath, StringComparison.OrdinalIgnoreCase) == true && _clipboard.Mode == ClipboardMode.Move))
+                (Directory.GetParent(sourcePath)?.FullName
+                     .Equals(destinationBasePath, StringComparison.OrdinalIgnoreCase) == true &&
+                 _clipboard.Mode == ClipboardMode.Move))
             {
                 _statusMessage = "[yellow]Source and destination are the same.[/]";
                 if (_clipboard.Mode == ClipboardMode.Move) ClearClipboard();
@@ -300,6 +317,7 @@ namespace termix
                 {
                     _progressTaskDescription = value.currentFile;
                 }
+
                 _progressValue = value.totalBytes > 0 ? (double)value.completedBytes / value.totalBytes * 100 : 0;
                 SetNeedsRedraw();
             });
@@ -319,10 +337,11 @@ namespace termix
                 }
                 catch (Exception ex)
                 {
-                    response = new ActionResponse(false, $"[red]An unexpected error occurred: {ex.Message.EscapeMarkup()}[/]");
+                    response = new ActionResponse(false,
+                        $"[red]An unexpected error occurred: {ex.Message.EscapeMarkup()}[/]");
                 }
+
                 _statusMessage = response.Message;
-                
             }, token).ContinueWith(t =>
             {
                 _isOperationInProgress = false;
@@ -382,10 +401,12 @@ namespace termix
                         _recursiveSearchCache = task.Result;
                         if (!token.IsCancellationRequested && _inputText.Length > 0) ApplyFilter();
                     }
+
                     _isDeepSearchRunning = false;
                     SetNeedsRedraw();
                 }, token);
             }
+
             ApplyFilter();
         }
 
@@ -435,18 +456,29 @@ namespace termix
 
         private FileSystemItem GetSelectedItem() => _currentItems[_selectedIndex];
 
-        private void RefreshDirectory(string? findAndSelect = null, bool preserveSelection = false, bool setInitialSelection = false)
+        private void RefreshDirectory(string? findAndSelect = null, bool preserveSelection = false,
+            bool setInitialSelection = false)
         {
             var oldSelectedIndex = _selectedIndex;
             LoadCurrentDirectory();
 
             if (findAndSelect != null)
-                _selectedIndex = _currentItems.FindIndex(item => item.Name.Equals(findAndSelect, StringComparison.OrdinalIgnoreCase));
+            {
+                _selectedIndex = _currentItems.FindIndex(item =>
+                    item.Name.Equals(findAndSelect, StringComparison.OrdinalIgnoreCase));
+            }
             else if (preserveSelection)
+            {
                 _selectedIndex = Math.Clamp(oldSelectedIndex, 0, _currentItems.Count - 1);
+            }
             else if (setInitialSelection)
-                _selectedIndex = _currentItems.Count > 0 ? 0 : -1;
-            
+            {
+                var firstSelectableIndex = _currentItems.FindIndex(item => !item.IsParentDirectory);
+                _selectedIndex = firstSelectableIndex != -1 ? firstSelectableIndex : 0;
+
+                if (_currentItems.Count == 0) _selectedIndex = -1;
+            }
+
             if (_selectedIndex == -1 && _currentItems.Count > 0) _selectedIndex = 0;
 
             AdjustViewPort();
@@ -494,8 +526,9 @@ namespace termix
                 _previewVerticalOffset = 0;
                 _previewHorizontalOffset = 0;
             }
+
             var selectedItem = _selectedIndex >= 0 && _selectedIndex < _currentItems.Count ? GetSelectedItem() : null;
-            _currentPreview = selectedItem == null || selectedItem.IsDirectory
+            _currentPreview = selectedItem == null
                 ? _filePreviewService.GetPreview(null, 0, 0)
                 : _filePreviewService.GetPreview(selectedItem.Path, _previewVerticalOffset, _previewHorizontalOffset);
             SetNeedsRedraw();
@@ -514,6 +547,7 @@ namespace termix
                     CurrentMode = InputMode.FilteredNavigation;
                     SetNeedsRedraw();
                 }
+
                 _navigationStack.Push(selectedItem.Name);
                 NavigateToDirectory(selectedItem.Path);
             }
@@ -583,8 +617,8 @@ namespace termix
                 _unfilteredItems = [];
                 _selectedIndex = -1;
             }
+
             SetNeedsRedraw();
         }
     }
 }
-

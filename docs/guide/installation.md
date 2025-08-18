@@ -18,9 +18,9 @@ Termix provides script-based installers for **macOS**, **Linux**, and **Windows*
 
 Requirements:
 
-* `curl`
-* `unzip` or `tar`
-* `jq`
+- `curl`
+- `unzip` or `tar`
+- `jq`
 
 ```bash
 # Install or update to the latest version
@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | ba
 
 Requirements:
 
-* PowerShell 5.1 or later (PowerShell Core 7+ recommended)
+- PowerShell 5.1 or later (PowerShell Core 7+ recommended)
 
 ```powershell
 # Install or update to latest
@@ -54,7 +54,7 @@ iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -U
 
 Requires:
 
-* **.NET 9 SDK** or later
+- **.NET 9 SDK** or later
 
 ```bash
 dotnet tool install --global termix
@@ -98,9 +98,9 @@ For icons, install a [Nerd Font](https://www.nerdfonts.com/):
 
 **Recommended:**
 
-* FiraCode Nerd Font
-* JetBrains Mono Nerd Font
-* Cascadia Code Nerd Font
+- FiraCode Nerd Font
+- JetBrains Mono Nerd Font
+- Cascadia Code Nerd Font
 
 1. Download from [nerdfonts.com](https://www.nerdfonts.com/)
 2. Install on your system
@@ -109,7 +109,6 @@ For icons, install a [Nerd Font](https://www.nerdfonts.com/):
 ::: tip Icon Fallback
 If Nerd Fonts aren’t installed, Termix falls back to ASCII characters.
 :::
-
 
 ## Command-Line Options
 
@@ -125,9 +124,9 @@ termix --no-icons
 
 ### Command Not Found
 
-* Ensure .NET tools are in `PATH`
-* Restart your terminal
-* Verify with:
+- Ensure .NET tools are in `PATH`
+- Restart your terminal
+- Verify with:
 
 ```bash
 dotnet tool list --global
@@ -135,8 +134,8 @@ dotnet tool list --global
 
 ### .NET SDK Not Found
 
-* Install .NET 9 from [dotnet.microsoft.com](https://dotnet.microsoft.com/)
-* Check version with `dotnet --version`
+- Install .NET 9 from [dotnet.microsoft.com](https://dotnet.microsoft.com/)
+- Check version with `dotnet --version`
 
 ### Permission Errors
 
@@ -149,7 +148,7 @@ dotnet tool install --global termix
 ```
 
 ::: info Version Info
-**Current stable version:** 1.5.1
+**Current stable version:** 1.8.0
 
 **Minimum .NET:** 9.0
 

@@ -150,6 +150,8 @@ dotnet tool install --global --add-source ./nupkg termix
 | `X`                   | Move the selected file or folder                    |
 | `C`                   | Copy the selected file or folder                    |
 | `P`                   | Paste the file or folder                            |
+| `t`                   | Open the interactive sort menu                      |
+
 
 ### Preview Pane
 

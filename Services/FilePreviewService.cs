@@ -4,6 +4,7 @@ using Spectre.Console.Rendering;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using termix.models;
 
 namespace termix.Services;
 
@@ -142,7 +143,8 @@ public class FilePreviewService(IconProvider iconProvider)
     {
         try
         {
-            var items = FileSystemService.GetDirectoryContents(directoryPath)
+            var items = FileSystemService
+                .GetDirectoryContents(directoryPath, SortBy.Name, SortDirection.Ascending, true)
                 .Where(item => !item.IsParentDirectory)
                 .Take(Console.WindowHeight - 14)
                 .ToList();

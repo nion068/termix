@@ -1,30 +1,36 @@
+using termix.models;
+
 namespace termix.UI;
 
 public class InputHandler(FileManager fileManager)
 {
+    private readonly FileManagerState _state = fileManager.State;
     public void ProcessKey(ConsoleKeyInfo keyInfo)
     {
-        fileManager.ClearStatusMessage();
+        _state.StatusMessage = null;
 
-        if (fileManager.CurrentMode == FileManager.InputMode.Normal && keyInfo.Key == ConsoleKey.Escape && fileManager.HasClipboardItem())
+        if (_state.CurrentMode == InputMode.Normal && keyInfo.Key == ConsoleKey.Escape && _state.Clipboard != null)
         {
-            fileManager.ClearClipboard();
+            fileManager.ActionHandler.ClearClipboard();
             return;
         }
-
-        if (fileManager.CurrentMode != FileManager.InputMode.Normal || fileManager.IsViewFiltered ||
+        
+        if (_state.CurrentMode != InputMode.Normal || !string.IsNullOrEmpty(_state.InputText) ||
             keyInfo.Key != ConsoleKey.Escape)
-            switch (fileManager.CurrentMode)
+            switch (_state.CurrentMode)
             {
-                case FileManager.InputMode.Normal or FileManager.InputMode.FilteredNavigation:
+                case InputMode.Normal or InputMode.FilteredNavigation:
                     HandleNormalKeyPress(keyInfo);
+                    break;
+                case InputMode.SortMenu:
+                    HandleSortMenuInput(keyInfo);
                     break;
                 default:
                     HandleInputModeKeyPress(keyInfo);
                     break;
             }
         else
-            fileManager.ClearFilter();
+            fileManager.FilterHandler.ClearFilter();
     }
 
     private void HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
@@ -33,15 +39,15 @@ public class InputHandler(FileManager fileManager)
 
         switch (key)
         {
-            case ConsoleKey.Escape when fileManager.IsViewFiltered:
-                fileManager.ClearFilter();
+            case ConsoleKey.Escape when !string.IsNullOrEmpty(_state.InputText):
+                fileManager.FilterHandler.ClearFilter();
                 return;
             case ConsoleKey.Q:
-            case ConsoleKey.Escape when !fileManager.IsViewFiltered:
-                fileManager.RequestQuit();
+            case ConsoleKey.Escape:
+                fileManager.ActionHandler.RequestQuit();
                 return;
-            case ConsoleKey.B when fileManager.CurrentMode == FileManager.InputMode.FilteredNavigation:
-                fileManager.ReturnToFilter();
+            case ConsoleKey.B when _state.CurrentMode == InputMode.FilteredNavigation:
+                fileManager.FilterHandler.ReturnToFilter();
                 return;
         }
 
@@ -51,34 +57,57 @@ public class InputHandler(FileManager fileManager)
         {
             case ConsoleKey.Enter:
             case ConsoleKey.L:
-            case ConsoleKey.O: fileManager.OpenSelectedItem(); break;
+            case ConsoleKey.O: fileManager.NavigationHandler.OpenSelectedItem(); break;
             case ConsoleKey.Backspace:
-            case ConsoleKey.H: fileManager.NavigateUp(); break;
-            case ConsoleKey.A: fileManager.BeginAdd(); break;
-            case ConsoleKey.R: fileManager.BeginRename(); break;
-            case ConsoleKey.D: fileManager.BeginDelete(); break;
-            case ConsoleKey.S: fileManager.BeginFilter(); break;
-            case ConsoleKey.C: fileManager.BeginCopy(); break;
-            case ConsoleKey.X: fileManager.BeginMove(); break;
-            case ConsoleKey.P: fileManager.BeginPaste(); break;
+            case ConsoleKey.H: fileManager.NavigationHandler.NavigateUp(); break;
+            case ConsoleKey.A: fileManager.ActionHandler.BeginAdd(); break;
+            case ConsoleKey.R: fileManager.ActionHandler.BeginRename(); break;
+            case ConsoleKey.D: fileManager.ActionHandler.BeginDelete(); break;
+            case ConsoleKey.S: fileManager.FilterHandler.BeginFilter(); break;
+            case ConsoleKey.T: fileManager.ActionHandler.BeginSortMenu(); break;
+            case ConsoleKey.C: fileManager.ActionHandler.BeginCopy(); break;
+            case ConsoleKey.X: fileManager.ActionHandler.BeginMove(); break;
+            case ConsoleKey.P: fileManager.ActionHandler.BeginPaste(); break;
         }
     }
 
     private void HandleInputModeKeyPress(ConsoleKeyInfo keyInfo)
     {
-        switch (fileManager.CurrentMode)
+        switch (_state.CurrentMode)
         {
-            case FileManager.InputMode.Filter:
+            case InputMode.Filter:
                 HandleFilterInput(keyInfo);
                 break;
-            case FileManager.InputMode.Add or FileManager.InputMode.Rename:
+            case InputMode.Add or InputMode.Rename:
                 HandleStandardTextInput(keyInfo);
                 break;
-            case FileManager.InputMode.DeleteConfirm:
+            case InputMode.DeleteConfirm:
                 HandleDeleteConfirmation(keyInfo.Key);
                 break;
-            case FileManager.InputMode.QuitConfirm:
+            case InputMode.QuitConfirm:
                 HandleQuitConfirmation(keyInfo.Key);
+                break;
+        }
+    }
+    
+    private void HandleSortMenuInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.Escape:
+            case ConsoleKey.Q:
+                fileManager.ResetToNormalMode();
+                break;
+            case ConsoleKey.Enter:
+                fileManager.ActionHandler.ApplySort();
+                break;
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J:
+                fileManager.NavigationHandler.MoveSortMenuSelection(1);
+                break;
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K:
+                fileManager.NavigationHandler.MoveSortMenuSelection(-1);
                 break;
         }
     }
@@ -87,12 +116,8 @@ public class InputHandler(FileManager fileManager)
     {
         switch (key)
         {
-            case ConsoleKey.Y:
-                fileManager.Quit(true);
-                break;
-            case ConsoleKey.N or ConsoleKey.Escape:
-                fileManager.ResetToNormalMode();
-                break;
+            case ConsoleKey.Y: fileManager.Quit(true); break;
+            case ConsoleKey.N or ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
         }
     }
 
@@ -103,21 +128,18 @@ public class InputHandler(FileManager fileManager)
             case ConsoleKey.Enter:
             case ConsoleKey.UpArrow:
             case ConsoleKey.DownArrow:
-                fileManager.AcceptFilter();
+                fileManager.FilterHandler.AcceptFilter();
                 HandleNormalKeyPress(keyInfo);
                 break;
-
             case ConsoleKey.Escape:
-                fileManager.AcceptFilter();
+                fileManager.FilterHandler.AcceptFilter();
                 break;
-
-            case ConsoleKey.Backspace:
-                if (fileManager.GetInputText().Length > 0) fileManager.UpdateFilter(fileManager.GetInputText(-1));
+            case ConsoleKey.Backspace when _state.InputText.Length > 0:
+                fileManager.FilterHandler.UpdateFilter(_state.InputText[..^1]);
                 break;
-
             default:
                 if (!char.IsControl(keyInfo.KeyChar))
-                    fileManager.UpdateFilter(fileManager.GetInputText() + keyInfo.KeyChar);
+                    fileManager.FilterHandler.UpdateFilter(_state.InputText + keyInfo.KeyChar);
                 break;
         }
     }
@@ -126,11 +148,18 @@ public class InputHandler(FileManager fileManager)
     {
         switch (keyInfo.Key)
         {
-            case ConsoleKey.Enter: fileManager.CommitStandardTextInput(); break;
+            case ConsoleKey.Enter: fileManager.ActionHandler.CommitStandardTextInput(); break;
             case ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
-            case ConsoleKey.Backspace: fileManager.HandleBackspace(); break;
+            case ConsoleKey.Backspace when _state.InputText.Length > 0: 
+                _state.InputText = _state.InputText[..^1]; 
+                fileManager.SetNeedsRedraw(); 
+                break;
             default:
-                if (!char.IsControl(keyInfo.KeyChar)) fileManager.AppendInputText(keyInfo.KeyChar);
+                if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    _state.InputText += keyInfo.KeyChar;
+                    fileManager.SetNeedsRedraw();
+                }
                 break;
         }
     }
@@ -139,12 +168,8 @@ public class InputHandler(FileManager fileManager)
     {
         switch (key)
         {
-            case ConsoleKey.Y:
-                fileManager.CommitDelete();
-                break;
-            case ConsoleKey.N or ConsoleKey.Escape:
-                fileManager.ResetToNormalMode();
-                break;
+            case ConsoleKey.Y: fileManager.ActionHandler.CommitDelete(); break;
+            case ConsoleKey.N or ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
         }
     }
 
@@ -161,7 +186,7 @@ public class InputHandler(FileManager fileManager)
                 _ => (0, 0)
             };
             if (offset == (0, 0)) return false;
-            fileManager.ScrollPreview(offset.v, offset.h);
+            fileManager.NavigationHandler.ScrollPreview(offset.v, offset.h);
             return true;
         }
 
@@ -173,12 +198,12 @@ public class InputHandler(FileManager fileManager)
         };
         if (direction != 0)
         {
-            fileManager.MoveSelection(direction);
+            fileManager.NavigationHandler.MoveSelection(direction);
             return true;
         }
 
         if (key is not (ConsoleKey.Home or ConsoleKey.End)) return false;
-        fileManager.MoveSelectionToEdge(key == ConsoleKey.Home);
+        fileManager.NavigationHandler.MoveSelectionToEdge(key == ConsoleKey.Home);
         return true;
     }
 }

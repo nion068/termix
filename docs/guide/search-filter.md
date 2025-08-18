@@ -1,17 +1,4 @@
-# Search & Filter
-
-Termix's powerful search and filtering system allows you to find files instantly across your entire directory tree. This guide covers all search features, from basic filtering to advanced techniques.
-
-## Overview
-
-Termix search is designed to be:
-
-- **Instant**: Real-time results as you type
-- **Recursive**: Searches through all subdirectories
-- **Smart**: Respects `.gitignore` and ignore patterns
-- **Contextual**: Maintains search state for navigation
-
-## Basic Search
+# Basic Search
 
 ### Starting a Search
 
@@ -54,6 +41,23 @@ Termix operates in different modes during search:
 - **Maintained filter**: Only matching files are shown
 - **Status indication**: Shows current filter in status bar
 - **Operation support**: All file operations work on filtered results
+
+## Combining Search with Sorting
+
+Filtering finds _what_ you're looking for; sorting helps you organize it. You can use the interactive sort menu on both a full directory listing and on a filtered search result set.
+
+This creates a powerful workflow for finding exactly what you need.
+
+### Example Workflow: Find and Sort
+
+Imagine you want to find the most recently edited Markdown document in your entire project.
+
+1.  **Search (`S`)**: Press `S` and type `.md` to find all Markdown files.
+2.  **Navigate (`Esc`)**: Press `Esc` to apply the filter and browse the results.
+3.  **Sort (`T`)**: Press `T` to open the sort menu.
+4.  **Select**: Use the arrow keys to highlight **"Date: Newest First"** and press `Enter`.
+
+Instantly, your list of Markdown files is re-ordered, with the most recently modified file at the top, ready for you to open.
 
 ## Search Features
 
@@ -189,7 +193,7 @@ For very large directory trees:
 
 ### Moving Through Results
 
-Once you've applied a filter (pressed `Esc` after searching):
+Once you've applied a filter (pressed `Esc` after searching), you can easily navigate and organize the results. You can also press `T` at any time to sort the current list (e.g., by date or size).
 
 | Key               | Action   | Description                   |
 | ----------------- | -------- | ----------------------------- |
@@ -221,8 +225,8 @@ Termix tracks several aspects of search state:
 ### Code Development
 
 ```bash
-# Find all TypeScript component files
-S → .tsx → Esc
+# Find all TypeScript component files, then sort by newest
+S → .tsx → Esc → T → Select "Date: Newest First"
 
 # Find specific component
 S → Button → Esc
@@ -235,8 +239,8 @@ S → .spec. → Esc
 ### Configuration Management
 
 ```bash
-# Find configuration files
-S → config → Esc
+# Find all config files and sort by most recently modified
+S → config → Esc → T → Select "Date: Newest First"
 
 # Find environment files
 S → .env → Esc
@@ -251,8 +255,8 @@ S → package.json → Esc
 # Find README files
 S → README → Esc
 
-# Find markdown documentation
-S → .md → Esc
+# Find all markdown docs, then sort alphabetically
+S → .md → Esc → T → Select "Name: A to Z"
 
 # Find specific docs
 S → api → Esc
@@ -275,7 +279,7 @@ S → script → Esc
 
 1. **Start broad, then narrow**: Begin with general terms, then add specificity
 2. **Use extensions**: File extensions are very effective filters
-3. **Combine with navigation**: Search to find, navigate to explore
+3. **Combine with sorting**: Search to find, sort to organize
 4. **Use partial matches**: Don't type full filenames
 
 ### Search Patterns
@@ -287,7 +291,7 @@ S → script → Esc
 
 ### Workflow Integration
 
-1. **Search → Navigate → Operate**: Find files, explore context, perform operations
+1. **Search → Sort → Operate**: Find files, organize them, then perform operations
 2. **Search → Open → Return**: Use `B` to return to search results after opening files
 3. **Iterative refinement**: Refine search terms based on initial results
 
@@ -311,14 +315,15 @@ While Termix doesn't persist search history between sessions:
 
 ## Keyboard Shortcuts Reference
 
-| Key            | Mode     | Action                                    |
-| -------------- | -------- | ----------------------------------------- |
-| `S`            | Normal   | Start search                              |
-| `Esc`          | Search   | Apply filter and enter navigation mode    |
-| `Esc`          | Filtered | Clear filter and show all files           |
-| `B`            | Any      | Return to search results (when available) |
-| Character keys | Search   | Add to search query                       |
-| `Backspace`    | Search   | Remove from search query                  |
+| Key            | Mode              | Action                                    |
+| -------------- | ----------------- | ----------------------------------------- |
+| `S`            | Normal            | Start search                              |
+| `T`            | Normal / Filtered | **Open the interactive sort menu**        |
+| `Esc`          | Search            | Apply filter and enter navigation mode    |
+| `Esc`          | Filtered          | Clear filter and show all files           |
+| `B`            | Any               | Return to search results (when available) |
+| Character keys | Search            | Add to search query                       |
+| `Backspace`    | Search            | Remove from search query                  |
 
 ## Performance Tips
 
@@ -332,7 +337,7 @@ While Termix doesn't persist search history between sessions:
 ### Best Practices
 
 1. **Search before navigate**: Use search to find the right area, then navigate normally
-2. **Combine techniques**: Use search with other Termix features
+2. **Combine techniques**: Use search with sorting and other Termix features
 3. **Understand your project**: Know your directory structure to search effectively
 4. **Practice patterns**: Develop consistent search patterns for your workflow
 
@@ -345,5 +350,5 @@ Now that you understand search and filtering:
 - Explore [Troubleshooting](./troubleshooting.md) if you encounter issues
 
 ::: tip Pro Search Technique
-The most powerful search workflow: Use `S` to find files, `Esc` to navigate results, perform operations, then `B` to return to results and continue. This creates an efficient find-operate-repeat cycle!
+The most powerful workflow: Use **Search (`S`)** to find files, **Navigate (`Esc`)** the results, **Sort (`T`)** them to find the right one, perform operations, then use **Return (`B`)** to go back to your sorted results and continue. This creates an efficient find-organize-operate-repeat cycle!
 :::

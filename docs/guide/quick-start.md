@@ -11,6 +11,7 @@ termix
 ```
 
 You'll see Termix's two-pane interface:
+
 - **Left pane**: File and directory listing
 - **Right pane**: File preview (shows content of selected file)
 - **Bottom**: Status bar with keyboard shortcuts and current mode
@@ -19,18 +20,18 @@ You'll see Termix's two-pane interface:
 
 ### Moving Around
 
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Move selection up/down |
-| `J` / `K` | Vim-style movement (up/down) |
-| `Home` / `End` | Jump to first/last item |
+| Key            | Action                       |
+| -------------- | ---------------------------- |
+| `↑` / `↓`      | Move selection up/down       |
+| `J` / `K`      | Vim-style movement (up/down) |
+| `Home` / `End` | Jump to first/last item      |
 
 ### Opening Files and Directories
 
-| Key | Action |
-|-----|--------|
-| `Enter` or `L` | Open selected file or enter directory |
-| `Backspace` or `H` | Go to parent directory |
+| Key                | Action                                |
+| ------------------ | ------------------------------------- |
+| `Enter` or `L`     | Open selected file or enter directory |
+| `Backspace` or `H` | Go to parent directory                |
 
 Try navigating through your file system using these keys. Notice how the right pane updates to show a preview of the selected file!
 
@@ -40,11 +41,12 @@ Try navigating through your file system using these keys. Notice how the right p
 
 Press `A` to create a new file or folder:
 
-1. Press `A` 
+1. Press `A`
 2. Type the name (add `/` at the end for folders)
 3. Press `Enter`
 
 Examples:
+
 - `README.md` - Creates a file
 - `new-folder/` - Creates a directory
 - `script` - Creates `script.txt` (auto-adds .txt extension)
@@ -59,13 +61,15 @@ Examples:
 ### Copying and Moving
 
 **Copy a file:**
+
 1. Select the file
 2. Press `C` (copy to clipboard)
 3. Navigate to destination
 4. Press `P` (paste)
 
 **Move a file:**
-1. Select the file  
+
+1. Select the file
 2. Press `X` (cut to clipboard)
 3. Navigate to destination
 4. Press `P` (paste)
@@ -75,6 +79,24 @@ Examples:
 1. Select the file/folder
 2. Press `D`
 3. Confirm with `y` or cancel with `n`
+
+---
+
+## Organizing Your View with Sorting
+
+Tired of scrolling to find the most recent file? Termix's interactive sort menu lets you reorganize the file list instantly.
+
+1. Press `T` to open the sort menu.
+2. Use `↑` / `↓` or `j`/`k` to highlight an option.
+3. Press `Enter` to apply the sort.
+
+You can sort by:
+
+- **Name**: Alphabetically (A-Z) or reverse (Z-A).
+- **Date**: See the newest or oldest files first.
+- **Size**: Find the largest or smallest files.
+
+You can also choose to keep folders grouped at the top ("Folders First") or mix them in with your files for a true chronological or size-based sort.
 
 ## Search and Filter
 
@@ -106,9 +128,9 @@ The right pane shows previews of your files:
 
 For large files, you can scroll the preview:
 
-| Key | Action |
-|-----|--------|
-| `Alt + ↑/↓` | Scroll vertically |
+| Key         | Action              |
+| ----------- | ------------------- |
+| `Alt + ↑/↓` | Scroll vertically   |
 | `Alt + ←/→` | Scroll horizontally |
 
 ## Working with the Clipboard
@@ -122,17 +144,21 @@ Termix has a smart clipboard system:
 
 The clipboard remembers whether you copied or cut, so pasting will either copy or move the file accordingly.
 
+---
+
 ## Quick Reference
 
 Here are the essential shortcuts you'll use daily:
 
 ### Navigation
+
 - `↑↓` or `JK` - Move selection
 - `Enter` or `L` - Open/Enter
 - `Backspace` or `H` - Go up
 - `Q` - Quit
 
-### File Operations  
+### File Operations
+
 - `A` - Add (create file/folder)
 - `R` - Rename
 - `D` - Delete
@@ -140,25 +166,33 @@ Here are the essential shortcuts you'll use daily:
 - `X` - Move/Cut
 - `P` - Paste
 
-### Search
+### View & Search
+
+- `T` - **Open sort menu**
 - `S` - Start search
 - `Esc` - Apply filter / Clear filter
 - `B` - Return to search results (when navigating from filtered results)
+
+---
 
 ## Common Workflows
 
 ### Organizing Files
 
-1. **Create a new project folder:**
+1. **Find recently modified config files:**
+
+   - Press `T`, select "Date: Newest First", press `Enter`
+   - The most recently edited files will be at the top.
+
+2. **Move files into a new project folder:**
    - Press `A`, type `my-project/`, press `Enter`
-   
-2. **Move files into it:**
-   - Select file, press `X` (cut)
-   - Enter the folder, press `P` (paste)
+   - Select a file, press `X` (cut)
+   - Enter the new folder, press `P` (paste)
 
 ### Finding Files
 
 1. **Search for a specific file:**
+
    - Press `S`, type part of the filename
    - Press `Esc` to navigate results
    - Use arrow keys to select, `Enter` to open
@@ -166,15 +200,13 @@ Here are the essential shortcuts you'll use daily:
 2. **Return to search results:**
    - After opening a file from search results, press `B` to go back
 
-### Code Exploration  
+### Code Exploration
 
 1. **Navigate to a code project:**
    - Use normal navigation to find your project
-   
 2. **Search for specific files:**
    - Press `S`, type `.cs` to find C# files
    - Or type `controller` to find controller files
-   
 3. **Preview files:**
    - Select files to see syntax-highlighted previews
    - Use `Alt + ↑/↓` to scroll long files
@@ -198,8 +230,8 @@ Termix handles large directories efficiently. The recursive search works even wi
 Now that you know the basics:
 
 - Learn more about [Navigation](./navigation.md) techniques
-- Master [File Operations](./file-operations.md) 
+- Master [File Operations](./file-operations.md)
 - Explore [Search & Filter](./search-filter.md) in depth
 - Memorize [Keyboard Shortcuts](./keyboard-shortcuts.md)
 
-Ready to become a Termix power user? Let's dive deeper into each feature!
+Ready to become a Termix power user? Let's dive deeper into each feature

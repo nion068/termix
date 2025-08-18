@@ -7,20 +7,41 @@ namespace termix.UI;
 
 public class FileManagerRenderer(IconProvider iconProvider)
 {
-    public Layout GetLayout(string currentPath, List<FileSystemItem> items, int selectedIndex,
-        IRenderable previewContent, int viewOffset, IRenderable footerRenderable)
+    public Layout GetLayout(FileManager fm, IRenderable footerRenderable)
     {
-        var header = CreateHeader(currentPath);
-        var body = CreateBody(items, selectedIndex, previewContent, viewOffset);
-        
-        var footer = new Panel(Align.Center(footerRenderable)) { Border = BoxBorder.None };
+        var header = CreateHeader(fm.State.CurrentPath);
+        var body = fm.State.CurrentMode == InputMode.SortMenu
+            ? CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex)
+            : CreateBody(fm.State.CurrentItems, fm.State.SelectedIndex, fm.State.CurrentPreview, fm.State.ViewOffset);
 
+        var footer = new Panel(Align.Center(footerRenderable)) { Border = BoxBorder.None };
         return new Layout("Root")
             .SplitRows(
                 new Layout("Header").Update(header).Size(3),
                 new Layout("Body").Update(body),
-                new Layout("Footer").Update(footer).Size(3) 
+                new Layout("Footer").Update(footer).Size(3)
             );
+    }
+
+    private static IRenderable CreateSortMenuBody(
+        List<(string Text, SortBy By, SortDirection Dir, bool Group)> options,
+        int selectedIndex)
+    {
+        var table = new Table()
+            .Title("[bold]Sort Options[/]")
+            .Border(TableBorder.Rounded)
+            .BorderStyle("yellow");
+
+        table.AddColumn("Options");
+
+        for (var i = 0; i < options.Count; i++)
+        {
+            var option = options[i];
+            var style = i == selectedIndex ? new Style(background: Color.DodgerBlue1) : Style.Plain;
+            table.AddRow(new Markup(option.Text.EscapeMarkup(), style));
+        }
+
+        return new Align(table, HorizontalAlignment.Center, VerticalAlignment.Middle);
     }
 
     private static Panel CreateHeader(string currentPath)

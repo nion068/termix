@@ -94,4 +94,27 @@ public class NavigationHandler(FileManager fileManager)
         _state.PreviewHorizontalOffset = Math.Max(0, _state.PreviewHorizontalOffset + horizontal);
         fileManager.UpdatePreview(false);
     }
+
+    public void ScrollSelection(int direction)
+    {
+        if (_state.CurrentItems.Count == 0) return;
+        
+        var pageSize = Console.WindowHeight - 12;
+        pageSize = Math.Max(5, pageSize); // Ensure minimum page size
+        
+        var scrollAmount = Math.Max(1, pageSize / 2);
+        
+        var actualScrollAmount = direction > 0 ? scrollAmount : -scrollAmount;
+        
+        var newIndex = _state.SelectedIndex + actualScrollAmount;
+        
+        newIndex = Math.Clamp(newIndex, 0, _state.CurrentItems.Count - 1);
+        
+        if (newIndex != _state.SelectedIndex)
+        {
+            _state.SelectedIndex = newIndex;
+            fileManager.AdjustViewPort();
+            fileManager.UpdatePreview();
+        }
+    }
 }

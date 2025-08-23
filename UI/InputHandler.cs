@@ -5,9 +5,20 @@ namespace termix.UI;
 public class InputHandler(FileManager fileManager)
 {
     private readonly FileManagerState _state = fileManager.State;
+    private string _keyBuffer = "";
+    private DateTime _lastKeyTime = DateTime.MinValue;
+    private const int KEY_TIMEOUT_MS = 1000; // 1 second timeout for multi-key sequences
+
     public void ProcessKey(ConsoleKeyInfo keyInfo)
     {
         _state.StatusMessage = null;
+
+        // Handle key buffer timeout
+        if ((DateTime.Now - _lastKeyTime).TotalMilliseconds > KEY_TIMEOUT_MS)
+        {
+            _keyBuffer = "";
+        }
+        _lastKeyTime = DateTime.Now;
 
         if (_state.CurrentMode == InputMode.Normal && keyInfo.Key == ConsoleKey.Escape && _state.Clipboard != null)
         {
@@ -36,6 +47,8 @@ public class InputHandler(FileManager fileManager)
     private void HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
     {
         var key = keyInfo.Key;
+
+        if (HandleMultiKeySequence(keyInfo)) return;
 
         switch (key)
         {
@@ -69,6 +82,39 @@ public class InputHandler(FileManager fileManager)
             case ConsoleKey.X: fileManager.ActionHandler.BeginMove(); break;
             case ConsoleKey.P: fileManager.ActionHandler.BeginPaste(); break;
         }
+    }
+
+    private bool HandleMultiKeySequence(ConsoleKeyInfo keyInfo)
+    {
+        var keyChar = keyInfo.KeyChar;
+        
+        if (keyChar == 'G')
+        {
+            fileManager.NavigationHandler.MoveSelectionToEdge(false);
+            _keyBuffer = "";
+            return true;
+        }
+        
+        _keyBuffer += keyChar.ToString().ToLower();
+        
+        if (_keyBuffer == "gg")
+        {
+            fileManager.NavigationHandler.MoveSelectionToEdge(true);
+            _keyBuffer = "";
+            return true;
+        }
+        
+        if (_keyBuffer.Length > 2)
+        {
+            _keyBuffer = keyChar.ToString().ToLower();
+        }
+        
+        if (keyChar != 'g')
+        {
+            _keyBuffer = "";
+        }
+        
+        return false;
     }
 
     private void HandleInputModeKeyPress(ConsoleKeyInfo keyInfo)
@@ -175,6 +221,19 @@ public class InputHandler(FileManager fileManager)
 
     private bool HandleSelectionMovement(ConsoleKey key, ConsoleModifiers modifier)
     {
+        if (modifier == ConsoleModifiers.Control)
+        {
+            switch (key)
+            {
+                case ConsoleKey.D:
+                    fileManager.NavigationHandler.ScrollSelection(1); // Scroll down (positive direction)
+                    return true;
+                case ConsoleKey.U:
+                    fileManager.NavigationHandler.ScrollSelection(-1); // Scroll up (negative direction)
+                    return true;
+            }
+        }
+
         if (modifier == ConsoleModifiers.Alt)
         {
             (int v, int h) offset = key switch

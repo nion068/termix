@@ -25,6 +25,8 @@ Master all of Termix's keyboard shortcuts for maximum productivity. This compreh
 | `K` | Move down (Vim) | Vim-style down movement |
 | `Home` | Jump to top | Select first item in list |
 | `End` | Jump to bottom | Select last item in list |
+| `Ctrl+d` | Scroll down | Scroll down half page size (vim-style) |
+| `Ctrl+u` | Scroll up | Scroll up half page size (vim-style) |
 
 ### Directory Navigation
 | Key | Action | Description |
@@ -163,6 +165,10 @@ For Vim users, these combinations feel natural:
 ```
 h j k l    →    H J K L
 ← ↓ ↑ →    →    Parent Down Up Enter
+gg         →    Go to top of list
+G          →    Go to bottom of list
+Ctrl+d     →    Scroll down half page size
+Ctrl+u     →    Scroll up half page size
 ```
 
 ### Power User Workflows
@@ -268,6 +274,10 @@ Termix is entirely keyboard-driven:
 | `k` | `K` | Move up |
 | `h` | `H` | Go left/up |
 | `l` | `L` | Go right/down |
+| `gg` | `Home` | Jump to top  |
+| `G` | `End` | Jump to bottom  |
+| `Ctrl+d` | `Ctrl+d` | Scroll down half page size |
+| `Ctrl+u` | `Ctrl+u` | Scroll up half page size |
 
 ## Troubleshooting Key Issues
 

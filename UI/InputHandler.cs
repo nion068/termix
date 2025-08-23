@@ -221,6 +221,19 @@ public class InputHandler(FileManager fileManager)
 
     private bool HandleSelectionMovement(ConsoleKey key, ConsoleModifiers modifier)
     {
+        if (modifier == ConsoleModifiers.Control)
+        {
+            switch (key)
+            {
+                case ConsoleKey.D:
+                    fileManager.NavigationHandler.ScrollSelection(1); // Scroll down (positive direction)
+                    return true;
+                case ConsoleKey.U:
+                    fileManager.NavigationHandler.ScrollSelection(-1); // Scroll up (negative direction)
+                    return true;
+            }
+        }
+
         if (modifier == ConsoleModifiers.Alt)
         {
             (int v, int h) offset = key switch

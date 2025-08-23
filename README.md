@@ -37,6 +37,7 @@ https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
 -  **Flicker-Free UI**: Double-buffered interface ensures smooth rendering in a two-pane layout
 -  **Live Syntax Highlighting**: Preview various file types with syntax highlighting (`.cs`, `.js`, `.ts`, `.py`, and more)
 -  **Vim-Style Navigation**: Use `J`/`K` alongside arrow keys for efficient movement
+-  **Vim-Style Navigation**: Use `gg`/`G` for top/bottom navigation
 -  **Nerd Font Support**: Enhanced experience with icon support, with ASCII fallback for maximum compatibility
 -  **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux
 

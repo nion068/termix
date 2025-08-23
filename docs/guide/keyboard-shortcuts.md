@@ -163,6 +163,8 @@ For Vim users, these combinations feel natural:
 ```
 h j k l    →    H J K L
 ← ↓ ↑ →    →    Parent Down Up Enter
+gg         →    Go to top of list
+G          →    Go to bottom of list
 ```
 
 ### Power User Workflows
@@ -268,6 +270,8 @@ Termix is entirely keyboard-driven:
 | `k` | `K` | Move up |
 | `h` | `H` | Go left/up |
 | `l` | `L` | Go right/down |
+| `gg` | `Home` | Jump to top  |
+| `G` | `End` | Jump to bottom  |
 
 ## Troubleshooting Key Issues
 

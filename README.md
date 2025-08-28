@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡️ Termix 
+# ⚡️ Termix
 
 **A modern, high-performance file navigator for your terminal**
 
@@ -12,7 +12,8 @@
 [![GitHub issues](https://img.shields.io/github/issues/amrohan/termix.svg)](https://GitHub.com/amrohan/termix/issues/)
 [![GitHub stars](https://img.shields.io/github/stars/amrohan/termix.svg?style=social&label=Star)](https://GitHub.com/amrohan/termix/stargazers/)
 
-Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, flicker-free interface for navigating, searching, and managing files—all from your terminal.
+Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, flicker-free interface for navigating,
+searching, and managing files—all from your terminal.
 
 [Documentation](https://termix.pages.dev)
 
@@ -20,8 +21,7 @@ Built with .NET 9 and Spectre.Console, Termix delivers a fluid, visually rich, f
 
 ---
 
-##  Demo
-
+## Demo
 
 https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
 
@@ -29,23 +29,27 @@ https://github.com/user-attachments/assets/c7b47493-ed6b-4b29-b334-f11f65d2dd18
 
 > **Watch the full walkthrough** → [Termix on Vimeo](https://vimeo.com/1105824424) *(1 minute)*
 
-##  Features
+## Features
 
--  **Instant Recursive Filtering**: Start typing to filter files and directories in real-time
--  **Intuitive File Operations**: Create, rename, move, copy, and delete files and directories with visual progress tracking
--  **Smart Ignoring**: Respects `.gitignore` and automatically filters out common build directories
--  **Flicker-Free UI**: Double-buffered interface ensures smooth rendering in a two-pane layout
--  **Live Syntax Highlighting**: Preview various file types with syntax highlighting (`.cs`, `.js`, `.ts`, `.py`, and more)
--  **Vim-Style Navigation**: Use `J`/`K` alongside arrow keys for efficient movement
--  **Vim-Style Navigation**: Use `gg`/`G` for top/bottom navigation, `Ctrl+d`/`Ctrl+u` for dynamic scrolling
--  **Nerd Font Support**: Enhanced experience with icon support, with ASCII fallback for maximum compatibility
--  **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux
+- **Vim-Style Visual Mode**: Select multiple files and perform batch operations (copy, move, delete) with ease.
+- **Instant Recursive Filtering**: Start typing to filter files and directories in real-time
+- **Intuitive File Operations**: Create, rename, move, copy, and delete files and directories with visual progress
+  tracking
+- **Smart Ignoring**: Respects `.gitignore` and automatically filters out common build directories
+- **Flicker-Free UI**: Double-buffered interface ensures smooth rendering in a two-pane layout
+- **Live Syntax Highlighting**: Preview various file types with syntax highlighting (`.cs`, `.js`, `.ts`, `.py`, and
+  more)
+- **Vim-Style Navigation**: Use `J`/`K` alongside arrow keys for efficient movement
+- **Vim-Style Navigation**: Use `gg`/`G` for top/bottom navigation, `Ctrl+d`/`Ctrl+u` for dynamic scrolling
+- **Nerd Font Support**: Enhanced experience with icon support, with ASCII fallback for maximum compatibility
+- **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux
 
-##  Installation
+## Installation
 
 ### Option 1: Install via Script (All Platforms)
 
 #### Prerequisites
+
 Before using the script-based installers, make sure you have:
 
 - **macOS / Linux**:
@@ -64,7 +68,7 @@ You can install or update Termix directly via our official installer:
 curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash
 
 # Install specific version
-curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s v1.5.0
+curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s v2.0.0
 
 # Uninstall
 curl -fsSL https://raw.githubusercontent.com/amrohan/termix/main/install.sh | bash -s uninstall
@@ -79,12 +83,11 @@ Open PowerShell and run:
 iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1")
 
 # Install specific version
-iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Tag v1.5.0
+iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Tag v2.0.0
 
 # Uninstall
 iex (iwr "https://raw.githubusercontent.com/amrohan/termix/main/install.ps1") -Uninstall
 ```
-
 
 ### Option 2: Install as a .NET Global Tool (All Platforms)
 
@@ -124,24 +127,25 @@ dotnet pack
 dotnet tool install --global --add-source ./nupkg termix
 ````
 
-##  Keyboard Shortcuts
+## Keyboard Shortcuts
 
 ### Navigation
 
-| Keys              | Action                       |
-|:------------------|:-----------------------------|
-| ↑ / ↓             | Move selection up/down       |
-| `J` / `K`         | Vim-style movement           |
-| `Enter` / `L`     | Open file or enter directory |
-| `Backspace` / `H` | Go to parent directory       |
-| `Home` / `End`    | Jump to first or last entry  |
+| Keys                | Action                                    |
+|:--------------------|:------------------------------------------|
+| ↑ / ↓               | Move selection up/down                    |
+| `J` / `K`           | Vim-style movement                        |
+| `Enter` / `L`       | Open file or enter directory              |
+| `Backspace` / `H`   | Go to parent directory                    |
+| `Home` / `End`      | Jump to first or last entry               |
 | `Ctrl+d` / `Ctrl+u` | Scroll down/up half page size (vim-style) |
-| `Q`               | Quit Termix                  |
+| `Q`                 | Quit Termix                               |
 
 ### File Operations
 
 | Keys                  | Action                                              |
 |:----------------------|:----------------------------------------------------|
+| `v`                   | Enter/Exit Visual Mode to select multiple items     |
 | `S`                   | Enter search mode (filters recursively as you type) |
 | `Esc` (during search) | Apply the filter and navigate the results           |
 | `Esc` (after search)  | Clear the filter and show all items                 |
@@ -154,6 +158,16 @@ dotnet tool install --global --add-source ./nupkg termix
 | `P`                   | Paste the file or folder                            |
 | `t`                   | Open the interactive sort menu                      |
 
+### Visual Mode
+
+| Keys      | Action                       |
+|:----------|:-----------------------------|
+| `Space`   | Toggle selection for an item |
+| `A`       | Select all items in the view |
+| `I`       | Invert the current selection |
+| `C` / `X` | Copy/Move all selected items |
+| `D`       | Delete all selected items    |
+| `V`/`Esc` | Exit Visual Mode             |
 
 ### Preview Pane
 
@@ -162,7 +176,8 @@ dotnet tool install --global --add-source ./nupkg termix
 | `Alt + ↑ / ↓` | Scroll vertically   |
 | `Alt + ← / →` | Scroll horizontally |
 
-##  Documentation
+## Documentation
+
 You can find the detail [documentation here](https://termix.pages.dev)
 
 ### Configuration
@@ -177,13 +192,15 @@ Termix provides rich previews and syntax highlighting for many common file types
 - **Images**: Preview support for `.png`, `.jpg`, `.jpeg`, (terminal-compatible rendering)
 - **Configuration**: `.yaml`, `.yml`, `.toml`, `.ini`, `.conf`, `.config`
 
-##  Project Status
+## Project Status
 
-Termix is actively maintained and continuously improved. Check the [GitHub releases page](https://github.com/amrohan/termix/releases) for the latest updates and features.
+Termix is actively maintained and continuously improved. Check
+the [GitHub releases page](https://github.com/amrohan/termix/releases) for the latest updates and features.
 
-##  Contributing
+## Contributing
 
-Contributions are always welcome! Whether it's bug reports, feature requests, or code contributions, please feel free to get involved.
+Contributions are always welcome! Whether it's bug reports, feature requests, or code contributions, please feel free to
+get involved.
 
 1. **Fork** the repository on GitHub
 2. **Clone** the forked repository to your machine
@@ -221,7 +238,7 @@ If you'd like to contribute to the development of Termix:
 - Update documentation to reflect your changes
 - Branch from `main` and use descriptive commit messages
 
-##  Acknowledgements
+## Acknowledgements
 
 - This project is made possible by the fantastic [Spectre.Console](https://spectreconsole.net/) library
 - Glob-style ignore matching is handled by [DotNet.Glob](https://github.com/dazinator/DotNet.Glob)
@@ -229,6 +246,6 @@ If you'd like to contribute to the development of Termix:
 - Icons are powered by the [Nerd Fonts](https://www.nerdfonts.com/) project
 - Inspired by the simplicity and elegance of .NET Global Tools
 
-##  License
+## License
 
 Termix is licensed under the [MIT License](./LICENSE.txt).

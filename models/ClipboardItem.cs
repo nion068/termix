@@ -6,4 +6,4 @@ public enum ClipboardMode
     Move
 }
 
-public record ClipboardItem(FileSystemItem Item, ClipboardMode Mode);
+public record ClipboardItem(List<FileSystemItem> Items, ClipboardMode Mode);

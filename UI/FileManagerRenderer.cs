@@ -12,7 +12,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
         var header = CreateHeader(fm.State.CurrentPath);
         var body = fm.State.CurrentMode == InputMode.SortMenu
             ? CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex)
-            : CreateBody(fm.State.CurrentItems, fm.State.SelectedIndex, fm.State.CurrentPreview, fm.State.ViewOffset);
+            : CreateBody(fm.State, fm.State.CurrentPreview);
 
         var footer = new Panel(Align.Center(footerRenderable)) { Border = BoxBorder.None };
         return new Layout("Root")
@@ -51,16 +51,16 @@ public class FileManagerRenderer(IconProvider iconProvider)
         return new Panel(headerContent) { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Cyan1) };
     }
 
-    private Layout CreateBody(List<FileSystemItem> items, int selectedIndex, IRenderable previewContent, int viewOffset)
+    private Layout CreateBody(FileManagerState state, IRenderable previewContent)
     {
-        var fileTable = CreateFileTable(items, selectedIndex, viewOffset);
+        var fileTable = CreateFileTable(state);
         return new Layout("Body").SplitColumns(
             new Layout("FileList").Update(fileTable).Ratio(3),
             new Layout("Preview").Update(previewContent).Ratio(3)
         );
     }
 
-    private Table CreateFileTable(List<FileSystemItem> items, int selectedIndex, int viewOffset)
+    private Table CreateFileTable(FileManagerState state)
     {
         var table = new Table().Expand().Border(TableBorder.None);
         table.AddColumn("Name");
@@ -70,16 +70,21 @@ public class FileManagerRenderer(IconProvider iconProvider)
 
         var pageSize = Console.WindowHeight - 12;
         pageSize = Math.Max(5, pageSize);
-        var visibleItems = items.Skip(viewOffset).Take(pageSize).ToList();
+        var visibleItems = state.CurrentItems.Skip(state.ViewOffset).Take(pageSize).ToList();
 
         for (var i = 0; i < visibleItems.Count; i++)
         {
             var item = visibleItems[i];
-            var originalIndex = i + viewOffset;
-            var isSelected = originalIndex == selectedIndex;
-            var style = isSelected ? new Style(background: Color.DodgerBlue1) : Style.Plain;
-            var name = CreateNameMarkup(item);
-            var scrollChar = GetScrollbarChar(i, items.Count, pageSize, viewOffset, visibleItems.Count);
+            var originalIndex = i + state.ViewOffset;
+            var isHighlighted = originalIndex == state.SelectedIndex;
+            var isVisuallySelected = state.VisuallySelectedItems.Contains(item.Path);
+
+            var style = isHighlighted ? new Style(background: Color.DodgerBlue1)
+                        : isVisuallySelected ? new Style(background: Color.Grey30)
+                        : Style.Plain;
+
+            var name = CreateNameMarkup(item, isVisuallySelected);
+            var scrollChar = GetScrollbarChar(i, state.CurrentItems.Count, pageSize, state.ViewOffset, visibleItems.Count);
 
             table.AddRow(
                 new Markup(name, style),
@@ -107,12 +112,13 @@ public class FileManagerRenderer(IconProvider iconProvider)
         return "║";
     }
 
-    private string CreateNameMarkup(FileSystemItem item)
+    private string CreateNameMarkup(FileSystemItem item, bool isVisuallySelected)
     {
         var icon = iconProvider.GetIcon(item);
         var name = item.Name.EscapeMarkup();
         var nameStyle = item.IsDirectory ? "bold" : "";
-        return $"{icon}  [{nameStyle}]{name}[/]";
+        var selectionMarker = isVisuallySelected ? "[yellow]*[/]" : " ";
+        return $"{selectionMarker} {icon}  [{nameStyle}]{name}[/]";
     }
 
     public static void ShowError(string message)

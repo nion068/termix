@@ -13,7 +13,6 @@ public class InputHandler(FileManager fileManager)
     {
         _state.StatusMessage = null;
 
-        // Handle key buffer timeout
         if ((DateTime.Now - _lastKeyTime).TotalMilliseconds > KEY_TIMEOUT_MS)
         {
             _keyBuffer = "";
@@ -25,23 +24,110 @@ public class InputHandler(FileManager fileManager)
             fileManager.ActionHandler.ClearClipboard();
             return;
         }
-        
-        if (_state.CurrentMode != InputMode.Normal || !string.IsNullOrEmpty(_state.InputText) ||
-            keyInfo.Key != ConsoleKey.Escape)
-            switch (_state.CurrentMode)
-            {
-                case InputMode.Normal or InputMode.FilteredNavigation:
-                    HandleNormalKeyPress(keyInfo);
-                    break;
-                case InputMode.SortMenu:
-                    HandleSortMenuInput(keyInfo);
-                    break;
-                default:
-                    HandleInputModeKeyPress(keyInfo);
-                    break;
-            }
+
+        switch (_state.CurrentMode)
+        {
+            case InputMode.Normal or InputMode.FilteredNavigation:
+                HandleNormalKeyPress(keyInfo);
+                break;
+            case InputMode.SortMenu:
+                HandleSortMenuInput(keyInfo);
+                break;
+            case InputMode.Visual:
+                HandleVisualModeKeyPress(keyInfo);
+                break;
+             case InputMode.PasteConflict:
+                HandlePasteConflictInput(keyInfo);
+                break;
+            default:
+                HandleInputModeKeyPress(keyInfo);
+                break;
+        }
+    }
+
+    private void HandleVisualModeKeyPress(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.Escape:
+            case ConsoleKey.V:
+                fileManager.ResetToNormalMode();
+                break;
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J:
+                fileManager.NavigationHandler.MoveSelection(1);
+                break;
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K:
+                fileManager.NavigationHandler.MoveSelection(-1);
+                break;
+            case ConsoleKey.Spacebar:
+                ToggleVisualSelection();
+                break;
+            case ConsoleKey.A: // Select all
+                foreach (var item in _state.CurrentItems.Where(i => !i.IsParentDirectory))
+                {
+                    _state.VisuallySelectedItems.Add(item.Path);
+                }
+                fileManager.SetNeedsRedraw();
+                break;
+            case ConsoleKey.I: // Invert selection
+                var allItems = _state.CurrentItems.Where(i => !i.IsParentDirectory).Select(i => i.Path).ToHashSet();
+                var currentSelection = _state.VisuallySelectedItems.ToHashSet();
+                allItems.SymmetricExceptWith(currentSelection);
+                _state.VisuallySelectedItems.Clear();
+                foreach (var path in allItems) _state.VisuallySelectedItems.Add(path);
+                fileManager.SetNeedsRedraw();
+                break;
+            case ConsoleKey.C:
+                fileManager.ActionHandler.BeginCopy();
+                break;
+            case ConsoleKey.X:
+                fileManager.ActionHandler.BeginMove();
+                break;
+            case ConsoleKey.D:
+                fileManager.ActionHandler.BeginDelete();
+                break;
+        }
+    }
+
+    private void ToggleVisualSelection()
+    {
+        if (_state.SelectedIndex < 0 || _state.SelectedIndex >= _state.CurrentItems.Count) return;
+
+        var item = _state.CurrentItems[_state.SelectedIndex];
+        if (item.IsParentDirectory) return;
+
+        if (_state.VisuallySelectedItems.Contains(item.Path))
+        {
+            _state.VisuallySelectedItems.Remove(item.Path);
+        }
         else
-            fileManager.FilterHandler.ClearFilter();
+        {
+            _state.VisuallySelectedItems.Add(item.Path);
+        }
+        fileManager.SetNeedsRedraw();
+    }
+    private void HandlePasteConflictInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.S: // Skip
+                fileManager.ActionHandler.ResolveConflict(ConflictResolution.None, replace: false);
+                break;
+            case ConsoleKey.L: // Skip aLl
+                fileManager.ActionHandler.ResolveConflict(ConflictResolution.SkipAll, replace: false);
+                break;
+            case ConsoleKey.R: // Replace
+                fileManager.ActionHandler.ResolveConflict(ConflictResolution.None, replace: true);
+                break;
+            case ConsoleKey.A: // Replace All
+                fileManager.ActionHandler.ResolveConflict(ConflictResolution.ReplaceAll, replace: true);
+                break;
+            case ConsoleKey.Escape: // Cancel
+                fileManager.ActionHandler.CancelPasteOperation();
+                break;
+        }
     }
 
     private void HandleNormalKeyPress(ConsoleKeyInfo keyInfo)
@@ -56,8 +142,12 @@ public class InputHandler(FileManager fileManager)
                 fileManager.FilterHandler.ClearFilter();
                 return;
             case ConsoleKey.Q:
-            case ConsoleKey.Escape:
                 fileManager.ActionHandler.RequestQuit();
+                return;
+            case ConsoleKey.V:
+                _state.CurrentMode = InputMode.Visual;
+                _state.VisuallySelectedItems.Clear();
+                ToggleVisualSelection(); // Select current item on entering
                 return;
             case ConsoleKey.B when _state.CurrentMode == InputMode.FilteredNavigation:
                 fileManager.FilterHandler.ReturnToFilter();
@@ -87,33 +177,33 @@ public class InputHandler(FileManager fileManager)
     private bool HandleMultiKeySequence(ConsoleKeyInfo keyInfo)
     {
         var keyChar = keyInfo.KeyChar;
-        
+
         if (keyChar == 'G')
         {
             fileManager.NavigationHandler.MoveSelectionToEdge(false);
             _keyBuffer = "";
             return true;
         }
-        
+
         _keyBuffer += keyChar.ToString().ToLower();
-        
+
         if (_keyBuffer == "gg")
         {
             fileManager.NavigationHandler.MoveSelectionToEdge(true);
             _keyBuffer = "";
             return true;
         }
-        
+
         if (_keyBuffer.Length > 2)
         {
             _keyBuffer = keyChar.ToString().ToLower();
         }
-        
+
         if (keyChar != 'g')
         {
             _keyBuffer = "";
         }
-        
+
         return false;
     }
 
@@ -135,7 +225,7 @@ public class InputHandler(FileManager fileManager)
                 break;
         }
     }
-    
+
     private void HandleSortMenuInput(ConsoleKeyInfo keyInfo)
     {
         switch (keyInfo.Key)
@@ -196,9 +286,9 @@ public class InputHandler(FileManager fileManager)
         {
             case ConsoleKey.Enter: fileManager.ActionHandler.CommitStandardTextInput(); break;
             case ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
-            case ConsoleKey.Backspace when _state.InputText.Length > 0: 
-                _state.InputText = _state.InputText[..^1]; 
-                fileManager.SetNeedsRedraw(); 
+            case ConsoleKey.Backspace when _state.InputText.Length > 0:
+                _state.InputText = _state.InputText[..^1];
+                fileManager.SetNeedsRedraw();
                 break;
             default:
                 if (!char.IsControl(keyInfo.KeyChar))

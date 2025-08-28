@@ -9,5 +9,7 @@ public enum InputMode
     Filter,
     FilteredNavigation,
     QuitConfirm,
-    SortMenu
+    SortMenu,
+    Visual,
+    PasteConflict
 }

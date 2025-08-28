@@ -40,4 +40,23 @@ public class FileManagerState
     public SortDirection SortDirection { get; set; } = SortDirection.Ascending;
     public bool GroupDirectories { get; set; } = true;
     public int SortMenuSelectedIndex { get; set; }
+    public HashSet<string> VisuallySelectedItems { get; } = new();
+    public List<FileSystemItem> PendingDeleteItems { get; set; } = [];
+    public PasteConflictState? CurrentConflict { get; set; }
+    public ConflictResolution ActiveConflictResolution { get; set; } = ConflictResolution.None;
 }
+public enum ConflictResolution
+{
+    None,
+    SkipAll,
+    ReplaceAll
+}
+
+public  record PasteConflictState(
+    FileSystemItem SourceItem,
+    string DestinationPath,
+    Queue<FileSystemItem> RemainingItems,
+    ClipboardMode OriginalMode,
+    int TotalItems,
+    int CurrentItemIndex
+);

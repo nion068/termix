@@ -4,6 +4,7 @@ using termix.Handlers;
 using termix.models;
 using termix.Services;
 using termix.UI;
+using System.Collections.Concurrent;
 
 namespace termix
 {
@@ -22,6 +23,7 @@ namespace termix
         private bool _needsRedraw = true;
         private bool _shouldQuit;
 
+        private readonly ConcurrentQueue<Action> _uiActions = new();
         public readonly List<(string Text, SortBy By, SortDirection Dir, bool Group)> SortOptions =
         [
             ("Name: A to Z", SortBy.Name, SortDirection.Ascending, true),
@@ -47,6 +49,11 @@ namespace termix
             _inputHandler = new InputHandler(this);
         }
 
+        public void ScheduleUiAction(Action action)
+        {
+            _uiActions.Enqueue(action);
+        }
+
         public void Run()
         {
             AnsiConsole.Clear();
@@ -54,6 +61,11 @@ namespace termix
 
             while (!_shouldQuit)
             {
+                while (_uiActions.TryDequeue(out var action))
+                {
+                    action.Invoke();
+                }
+
                 if (_needsRedraw)
                 {
                     _needsRedraw = false;
@@ -62,7 +74,11 @@ namespace termix
                     _doubleBuffer.Render(layout);
                 }
 
-                while (!Console.KeyAvailable && !_needsRedraw && !_shouldQuit) Thread.Sleep(50);
+                while (!Console.KeyAvailable && !_needsRedraw && !_shouldQuit && _uiActions.IsEmpty)
+                {
+                    Thread.Sleep(50);
+                }
+
                 if (_shouldQuit) break;
                 if (Console.KeyAvailable) _inputHandler.ProcessKey(Console.ReadKey(true));
             }
@@ -83,6 +99,7 @@ namespace termix
             State.CurrentMode = InputMode.Normal;
             State.InputText = "";
             State.PromptText = "";
+            State.VisuallySelectedItems.Clear();
             SetNeedsRedraw();
         }
 
@@ -183,11 +200,19 @@ namespace termix
             }
 
             IRenderable content;
-            if (State.Clipboard != null)
+            if (State.CurrentMode == InputMode.PasteConflict)
+            {
+                content = new Markup(GetFooterText());
+            }
+            else if (State.Clipboard != null)
             {
                 var mode = State.Clipboard.Mode == ClipboardMode.Copy ? "Copy" : "Move";
+                var items = State.Clipboard.Items.Count == 1
+                    ? State.Clipboard.Items[0].Name.EscapeMarkup()
+                    : $"{State.Clipboard.Items.Count} items";
+
                 content = new Markup(
-                    $"[grey]Clipboard ({mode}):[/] [yellow]{State.Clipboard.Item.Name.EscapeMarkup()}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
+                    $"[grey]Clipboard ({mode}):[/] [yellow]{items}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
             }
             else
             {
@@ -201,6 +226,11 @@ namespace termix
         {
             switch (State.CurrentMode)
             {
+                case InputMode.PasteConflict:
+                    return State.PromptText; 
+                case InputMode.Visual:
+                    return
+                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]A[/] [grey]All[/] | [cyan]I[/] [grey]Invert[/] | [cyan]C[/] [grey]Copy[/] | [cyan]X[/] [grey]Move[/] | [cyan]D[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
                 case InputMode.SortMenu:
                     return
                         "[grey]Use[/] [cyan]↓↑/JK[/] [grey]to select[/] | [cyan]Enter[/] [grey]Apply[/] | [cyan]Esc[/] [grey]Cancel[/]";
@@ -220,7 +250,7 @@ namespace termix
                     return State.PromptText;
                 default:
                     return
-                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]T[/] [grey]Sort[/] | [cyan]C[/] [grey]Copy[/] | [cyan]X[/] [grey]Move[/] | [cyan]P[/] [grey]Paste[/] | " +
+                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]V[/] [grey]Visual[/] | [cyan]T[/] [grey]Sort[/] | [cyan]C[/] [grey]Copy[/] | [cyan]X[/] [grey]Move[/] | [cyan]P[/] [grey]Paste[/] | " +
                         "[cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]";
             }
         }

@@ -5,12 +5,14 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using termix.models;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using termix.Helpers;
 
 namespace termix.Services;
 
 public class FilePreviewService(IconProvider iconProvider)
 {
-    private static readonly string[] SourceArray = [".jpg", ".jpeg", ".png", ".gif", ".bmp"];
     private readonly CustomSyntaxHighlighter _highlighter = new();
     private const string TabReplacement = "    ";
 
@@ -34,13 +36,18 @@ public class FilePreviewService(IconProvider iconProvider)
 
         try
         {
-            if (IsImageFile(fileInfo.Extension))
+            if (FileTypeHelper.IsArchiveFile(fileInfo.Extension))
             {
-                return RenderImageWithMaximumRefinement(filePath, header);
+                return RenderArchivePreview(filePath, header);
+            }
+
+            if (FileTypeHelper.IsImageFile(fileInfo.Extension))
+            {
+                return RenderImagePreview(filePath, header);
             }
 
             var fileBytes = File.ReadAllBytes(filePath);
-            if (IsBinary(fileBytes))
+            if (FileTypeHelper.IsBinary(fileBytes))
                 return new Panel(Align.Center(new Text("Binary File\nNo preview available"), VerticalAlignment.Middle))
                     .Header(header).Expand().Border(BoxBorder.Rounded);
 
@@ -71,7 +78,7 @@ public class FilePreviewService(IconProvider iconProvider)
         }
     }
 
-    private static IRenderable RenderImageWithMaximumRefinement(string filePath, string header)
+    private static IRenderable RenderImagePreview(string filePath, string header)
     {
         using var image = Image.Load<Rgba32>(filePath);
 
@@ -173,13 +180,98 @@ public class FilePreviewService(IconProvider iconProvider)
         }
     }
 
-    private static bool IsImageFile(string extension)
+    private IRenderable RenderArchivePreview(string filePath, string header)
     {
-        return SourceArray.Contains(extension, StringComparer.OrdinalIgnoreCase);
-    }
+        try
+        {
+            using var archive = ArchiveFactory.Open(filePath);
+            var allEntries = archive.Entries
+                .Where(e => !e.IsDirectory) 
+                .OrderBy(e => e.Key)
+                .ToList();
 
-    private static bool IsBinary(byte[] fileBytes)
-    {
-        return fileBytes.Take(8000).Any(b => b == 0);
+            if (allEntries.Count == 0)
+            {
+                return new Panel(Align.Center(new Text("[grey]-- Archive is empty --[/]"), VerticalAlignment.Middle))
+                    .Header(header).Expand().Border(BoxBorder.Rounded);
+            }
+
+            var tree = new Tree($"[aqua bold]{new FileInfo(filePath).Name.EscapeMarkup()}[/]")
+            {
+                Guide = TreeGuide.Line
+            };
+
+            var directoryNodes = new Dictionary<string, IHasTreeNodes>();
+            var processedItems = 0;
+
+            foreach (var entry in allEntries)
+            {
+                if (processedItems >= Console.WindowHeight - 14) break;
+
+                var entryPath = (entry.Key ?? string.Empty).Replace('\\', '/');
+                var pathParts = entryPath.Split('/');
+
+                IHasTreeNodes currentNode = tree;
+
+                for (var i = 0; i < pathParts.Length - 1; i++)
+                {
+                    var dirName = pathParts[i];
+                    var currentPath = string.Join("/", pathParts.Take(i + 1));
+
+                    if (!directoryNodes.TryGetValue(currentPath, out var node))
+                    {
+                        var dirItem = new FileSystemItem(
+                            Path: currentPath,
+                            Name: dirName,
+                            IsDirectory: true,
+                            Size: 0,
+                            LastModified: DateTime.MinValue,
+                            IsParentDirectory: false
+                        );
+                        var icon = iconProvider.GetIcon(dirItem);
+                        var newNode = currentNode.AddNode($"{icon} {dirName.EscapeMarkup()}");
+                        directoryNodes[currentPath] = newNode;
+                        currentNode = newNode;
+                    }
+                    else
+                    {
+                        currentNode = node;
+                    }
+                }
+
+                var fileName = pathParts.Last();
+                if (string.IsNullOrEmpty(fileName)) continue;
+
+                var fileItem = new FileSystemItem(
+                    Path: entryPath,
+                    Name: fileName,
+                    IsDirectory: false,
+                    Size: entry.Size,
+                    LastModified: entry.LastModifiedTime?.Date ?? DateTime.MinValue,
+                    IsParentDirectory: false
+                );
+
+                var iconValue = iconProvider.GetIcon(fileItem);
+                var nodeText = $"{iconValue} {fileName.EscapeMarkup()} [yellow]({fileItem.FormattedSize})[/]";
+                currentNode.AddNode(nodeText);
+
+                processedItems++;
+            }
+
+            return new Panel(tree).Header(header).Expand().Border(BoxBorder.Rounded);
+        }
+        catch (InvalidFormatException ex)
+        {
+            var errorMessage =
+                $"[red]Cannot preview archive:[/] The file may be corrupt or an unsupported format.\n[grey]{ex.Message.EscapeMarkup()}[/]";
+            return new Panel(Align.Center(new Text(errorMessage), VerticalAlignment.Middle))
+                .Header(header).Expand().Border(BoxBorder.Rounded);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = $"[red]Error reading archive:[/] {ex.Message.EscapeMarkup()}";
+            return new Panel(Align.Center(new Text(errorMessage), VerticalAlignment.Middle))
+                .Header(header).Expand().Border(BoxBorder.Rounded);
+        }
     }
 }

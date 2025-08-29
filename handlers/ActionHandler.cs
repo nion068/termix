@@ -104,7 +104,7 @@ namespace termix.Handlers
                 PasteItem(conflict.SourceItem, conflict.DestinationPath, conflict.RemainingItems, destBasePath,
                     conflict.OriginalMode, conflict.TotalItems, conflict.CurrentItemIndex);
             }
-            else 
+            else
             {
                 conflict.RemainingItems.Dequeue();
                 ProcessPasteQueue(conflict.RemainingItems, destBasePath, conflict.OriginalMode, conflict.TotalItems,
@@ -212,8 +212,6 @@ namespace termix.Handlers
                 });
             }, token);
         }
-
-        #region Unchanged Methods
 
         public void BeginAdd()
         {
@@ -365,7 +363,5 @@ namespace termix.Handlers
 
             return selectedItems;
         }
-
-        #endregion
     }
 }

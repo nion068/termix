@@ -148,7 +148,7 @@ dotnet tool install --global termix
 ```
 
 ::: info Version Info
-**Current stable version:** 1.8.0
+**Current stable version:** 2.1.0
 
 **Minimum .NET:** 9.0
 

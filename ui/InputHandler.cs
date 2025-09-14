@@ -40,6 +40,9 @@ public class InputHandler(FileManager fileManager)
             case InputMode.PasteConflict:
                 HandlePasteConflictInput(keyInfo);
                 break;
+            case InputMode.CreateDirConfirm:
+                HandleCreateDirConfirmation(keyInfo.Key);
+                break;
             default:
                 HandleInputModeKeyPress(keyInfo);
                 break;
@@ -265,6 +268,15 @@ public class InputHandler(FileManager fileManager)
         {
             case ConsoleKey.Y: fileManager.Quit(true); break;
             case ConsoleKey.N or ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
+        }
+    }
+
+    private void HandleCreateDirConfirmation(ConsoleKey key)
+    {
+        switch (key)
+        {
+            case ConsoleKey.Y: fileManager.ActionHandler.ConfirmCreateDirectoryAndPaste(); break;
+            case ConsoleKey.N or ConsoleKey.Escape: fileManager.ActionHandler.CancelCreateDirectoryAndPaste(); break;
         }
     }
 

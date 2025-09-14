@@ -11,5 +11,6 @@ public enum InputMode
     QuitConfirm,
     SortMenu,
     Visual,
-    PasteConflict
+    PasteConflict,
+    CreateDirConfirm
 }

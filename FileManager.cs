@@ -24,6 +24,7 @@ namespace termix
         private bool _shouldQuit;
 
         private readonly ConcurrentQueue<Action> _uiActions = new();
+
         public readonly List<(string Text, SortBy By, SortDirection Dir, bool Group)> SortOptions =
         [
             ("Name: A to Z", SortBy.Name, SortDirection.Ascending, true),
@@ -199,26 +200,7 @@ namespace termix
                     { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Fuchsia) };
             }
 
-            IRenderable content;
-            if (State.CurrentMode == InputMode.PasteConflict)
-            {
-                content = new Markup(GetFooterText());
-            }
-            else if (State.Clipboard != null)
-            {
-                var mode = State.Clipboard.Mode == ClipboardMode.Copy ? "Yank" : "Move";
-                var items = State.Clipboard.Items.Count == 1
-                    ? State.Clipboard.Items[0].Name.EscapeMarkup()
-                    : $"{State.Clipboard.Items.Count} items";
-
-                content = new Markup(
-                    $"[grey]Clipboard ({mode}):[/] [yellow]{items}[/] | [cyan]p[/] Paste, [cyan]Esc[/] Clear");
-            }
-            else
-            {
-                content = new Markup(GetFooterText());
-            }
-
+            var content = new Markup(GetFooterText());
             return new Panel(Align.Center(content)) { Border = BoxBorder.None };
         }
 
@@ -227,7 +209,7 @@ namespace termix
             switch (State.CurrentMode)
             {
                 case InputMode.PasteConflict:
-                    return State.PromptText; 
+                    return State.PromptText;
                 case InputMode.Visual:
                     return
                         $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]a[/] [grey]All[/] | [cyan]i[/] [grey]Invert[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
@@ -246,9 +228,20 @@ namespace termix
                         $"{State.PromptText.EscapeMarkup()}{searchIndicator} [yellow]{State.InputText.EscapeMarkup()}[/][grey]█[/] | [grey]Press[/] [cyan]Esc[/] [grey]to navigate results[/]";
                 case InputMode.Add or InputMode.Rename:
                     return $"{State.PromptText.EscapeMarkup()}[yellow]{State.InputText.EscapeMarkup()}[/][grey]█[/]";
-                case InputMode.DeleteConfirm or InputMode.QuitConfirm:
+                case InputMode.DeleteConfirm or InputMode.QuitConfirm or InputMode.CreateDirConfirm:
                     return State.PromptText;
                 default:
+                    if (State.Clipboard != null)
+                    {
+                        var mode = State.Clipboard.Mode == ClipboardMode.Copy ? "Yank" : "Move";
+                        var items = State.Clipboard.Items.Count == 1
+                            ? State.Clipboard.Items[0].Name.EscapeMarkup()
+                            : $"{State.Clipboard.Items.Count} items";
+
+                        return
+                            $"[grey]Clipboard ({mode}):[/] [yellow]{items}[/] | [cyan]p[/] Paste, [cyan]Esc[/] Clear";
+                    }
+
                     return
                         "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]v[/] [grey]Visual[/] | [cyan]t[/] [grey]Sort[/] | [cyan]y[/] [grey]Yank[/] | [cyan]Y[/] [grey]Yank Path[/] | [cyan]x[/] [grey]Move[/] | [cyan]p[/] [grey]Paste[/] | " +
                         "[cyan]s[/] [grey]Search[/] | [cyan]a[/] [grey]Add[/] | [cyan]r[/] [grey]Rename[/] | [cyan]d[/] [grey]Delete[/] | [cyan]q[/] [grey]Quit[/]";

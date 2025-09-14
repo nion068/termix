@@ -26,6 +26,17 @@ namespace termix.Handlers
                 destinationBasePath = selectedItem.Path;
             }
 
+            if (!Directory.Exists(destinationBasePath))
+            {
+                _state.CurrentMode = InputMode.CreateDirConfirm;
+                _state.PendingCreateDirectoryPath = destinationBasePath;
+                var dirName = Path.GetFileName(destinationBasePath.TrimEnd(Path.DirectorySeparatorChar));
+                _state.PromptText =
+                    $"Directory '[yellow]{dirName.EscapeMarkup()}[/]' does not exist. Create it? [bold green]y[/]/[bold red]n[/]";
+                fileManager.SetNeedsRedraw();
+                return;
+            }
+
             var itemsToPaste = new Queue<FileSystemItem>(_state.Clipboard.Items);
             var totalItems = itemsToPaste.Count;
 
@@ -33,6 +44,44 @@ namespace termix.Handlers
             var originalMode = _state.Clipboard.Mode;
 
             ProcessPasteQueue(itemsToPaste, destinationBasePath, originalMode, totalItems, 0);
+        }
+
+        public void ConfirmCreateDirectoryAndPaste()
+        {
+            var pathToCreate = _state.PendingCreateDirectoryPath;
+            if (string.IsNullOrEmpty(pathToCreate))
+            {
+                fileManager.ResetToNormalMode();
+                return;
+            }
+
+            try
+            {
+                var newDirName = Path.GetFileName(pathToCreate.TrimEnd(Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(pathToCreate);
+
+                _state.StatusMessage =
+                    $"[green]Directory '{newDirName.EscapeMarkup()}' created. Preparing to paste...[/]";
+                _state.PendingCreateDirectoryPath = null;
+                fileManager.ResetToNormalMode();
+
+                fileManager.RefreshDirectory(findAndSelect: newDirName);
+
+                fileManager.ScheduleUiAction(BeginPaste);
+            }
+            catch (Exception ex)
+            {
+                _state.StatusMessage = $"[red]Error creating directory: {ex.Message.EscapeMarkup()}[/]";
+                _state.PendingCreateDirectoryPath = null;
+                fileManager.ResetToNormalMode();
+            }
+        }
+
+        public void CancelCreateDirectoryAndPaste()
+        {
+            _state.PendingCreateDirectoryPath = null;
+            _state.StatusMessage = "[yellow]Paste operation cancelled.[/]";
+            fileManager.ResetToNormalMode();
         }
 
         private void ProcessPasteQueue(Queue<FileSystemItem> items, string destBasePath, ClipboardMode mode, int total,
@@ -123,11 +172,6 @@ namespace termix.Handlers
         private void PasteItem(FileSystemItem item, string destPath, Queue<FileSystemItem> remainingItems,
             string destBasePath, ClipboardMode mode, int totalItems, int currentIndex)
         {
-            if (_state.Clipboard != null)
-            {
-                ClearClipboard();
-            }
-
             _state.IsOperationInProgress = true;
             _state.OperationCts = new CancellationTokenSource();
             var token = _state.OperationCts.Token;
@@ -294,6 +338,8 @@ namespace termix.Handlers
         public void ClearClipboard()
         {
             _state.Clipboard = null;
+            _state.StatusMessage = "[grey]Clipboard cleared.[/]";
+            fileManager.SetNeedsRedraw();
         }
 
         public void CommitStandardTextInput()

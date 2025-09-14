@@ -21,6 +21,8 @@ public class FileManagerState
 
     public ClipboardItem? Clipboard { get; set; }
     public string AddBasePath { get; set; } = "";
+    
+    public string? PendingCreateDirectoryPath { get; set; } 
 
     public IRenderable CurrentPreview { get; set; } = new Text("");
     public int PreviewVerticalOffset { get; set; }

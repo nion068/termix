@@ -7,13 +7,13 @@ public class InputHandler(FileManager fileManager)
     private readonly FileManagerState _state = fileManager.State;
     private string _keyBuffer = "";
     private DateTime _lastKeyTime = DateTime.MinValue;
-    private const int KEY_TIMEOUT_MS = 1000; // 1 second timeout for multi-key sequences
+    private const int KeyTimeoutMs = 1000; // 1 second timeout for multi-key sequences
 
     public void ProcessKey(ConsoleKeyInfo keyInfo)
     {
         _state.StatusMessage = null;
 
-        if ((DateTime.Now - _lastKeyTime).TotalMilliseconds > KEY_TIMEOUT_MS)
+        if ((DateTime.Now - _lastKeyTime).TotalMilliseconds > KeyTimeoutMs)
         {
             _keyBuffer = "";
         }
@@ -42,6 +42,9 @@ public class InputHandler(FileManager fileManager)
                 break;
             case InputMode.CreateDirConfirm:
                 HandleCreateDirConfirmation(keyInfo.Key);
+                break;
+            case InputMode.HelpScreen:
+                HandleHelpScreenInput(keyInfo);
                 break;
             default:
                 HandleInputModeKeyPress(keyInfo);
@@ -73,6 +76,7 @@ public class InputHandler(FileManager fileManager)
                 {
                     _state.VisuallySelectedItems.Add(item.Path);
                 }
+
                 fileManager.SetNeedsRedraw();
                 break;
             case ConsoleKey.I: // Invert selection
@@ -148,6 +152,9 @@ public class InputHandler(FileManager fileManager)
                 return;
             case 'Y':
                 fileManager.ActionHandler.YankDirectoryPath();
+                return;
+            case '?':
+                fileManager.ActionHandler.ShowHelpScreen();
                 return;
         }
 
@@ -378,5 +385,22 @@ public class InputHandler(FileManager fileManager)
         if (key is not (ConsoleKey.Home or ConsoleKey.End)) return false;
         fileManager.NavigationHandler.MoveSelectionToEdge(key == ConsoleKey.Home);
         return true;
+    }
+    private void HandleHelpScreenInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.Escape:
+                fileManager.ResetToNormalMode();
+                break;
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K:
+                fileManager.NavigationHandler.ScrollHelpScreen(-1);
+                break;
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J:
+                fileManager.NavigationHandler.ScrollHelpScreen(1);
+                break;
+        }
     }
 }

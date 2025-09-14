@@ -1,5 +1,6 @@
 using Spectre.Console;
 using termix.models;
+using termix.Services;
 
 namespace termix.Handlers;
 
@@ -98,23 +99,30 @@ public class NavigationHandler(FileManager fileManager)
     public void ScrollSelection(int direction)
     {
         if (_state.CurrentItems.Count == 0) return;
-        
         var pageSize = Console.WindowHeight - 12;
-        pageSize = Math.Max(5, pageSize); // Ensure minimum page size
-        
+        pageSize = Math.Max(5, pageSize);
         var scrollAmount = Math.Max(1, pageSize / 2);
-        
         var actualScrollAmount = direction > 0 ? scrollAmount : -scrollAmount;
-        
         var newIndex = _state.SelectedIndex + actualScrollAmount;
-        
         newIndex = Math.Clamp(newIndex, 0, _state.CurrentItems.Count - 1);
-        
-        if (newIndex != _state.SelectedIndex)
-        {
-            _state.SelectedIndex = newIndex;
-            fileManager.AdjustViewPort();
-            fileManager.UpdatePreview();
-        }
+        if (newIndex == _state.SelectedIndex) return;
+        _state.SelectedIndex = newIndex;
+        fileManager.AdjustViewPort();
+        fileManager.UpdatePreview();
+    }
+
+    public void ScrollHelpScreen(int direction)
+    {
+        if (_state.CurrentMode != InputMode.HelpScreen) return;
+
+        var totalItems = HelpProvider.Keybindings.Count;
+        var pageSize = Console.WindowHeight - 12;
+        pageSize = Math.Max(5, pageSize);
+
+        var maxOffset = Math.Max(0, totalItems - pageSize);
+        var newOffset = _state.HelpVerticalOffset + direction;
+
+        _state.HelpVerticalOffset = Math.Clamp(newOffset, 0, maxOffset);
+        fileManager.SetNeedsRedraw();
     }
 }

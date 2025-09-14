@@ -21,8 +21,10 @@ public class FileManagerState
 
     public ClipboardItem? Clipboard { get; set; }
     public string AddBasePath { get; set; } = "";
-    
-    public string? PendingCreateDirectoryPath { get; set; } 
+
+    public string? PendingCreateDirectoryPath { get; set; }
+
+    public int HelpVerticalOffset { get; set; }
 
     public IRenderable CurrentPreview { get; set; } = new Text("");
     public int PreviewVerticalOffset { get; set; }
@@ -47,6 +49,7 @@ public class FileManagerState
     public PasteConflictState? CurrentConflict { get; set; }
     public ConflictResolution ActiveConflictResolution { get; set; } = ConflictResolution.None;
 }
+
 public enum ConflictResolution
 {
     None,
@@ -54,7 +57,7 @@ public enum ConflictResolution
     ReplaceAll
 }
 
-public  record PasteConflictState(
+public record PasteConflictState(
     FileSystemItem SourceItem,
     string DestinationPath,
     Queue<FileSystemItem> RemainingItems,

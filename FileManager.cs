@@ -204,15 +204,19 @@ namespace termix
             return new Panel(Align.Center(content)) { Border = BoxBorder.None };
         }
 
+
         private string GetFooterText()
         {
             switch (State.CurrentMode)
             {
+                case InputMode.HelpScreen:
+                    return
+                        "[grey]Use[/] [cyan]↑↓/JK[/] [grey]to scroll | Press[/] [cyan]Esc[/]";
                 case InputMode.PasteConflict:
                     return State.PromptText;
                 case InputMode.Visual:
                     return
-                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]a[/] [grey]All[/] | [cyan]i[/] [grey]Invert[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
+                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
                 case InputMode.SortMenu:
                     return
                         "[grey]Use[/] [cyan]↓↑/JK[/] [grey]to select[/] | [cyan]Enter[/] [grey]Apply[/] | [cyan]Esc[/] [grey]Cancel[/]";
@@ -243,8 +247,7 @@ namespace termix
                     }
 
                     return
-                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]v[/] [grey]Visual[/] | [cyan]t[/] [grey]Sort[/] | [cyan]y[/] [grey]Yank[/] | [cyan]Y[/] [grey]Yank Path[/] | [cyan]x[/] [grey]Move[/] | [cyan]p[/] [grey]Paste[/] | " +
-                        "[cyan]s[/] [grey]Search[/] | [cyan]a[/] [grey]Add[/] | [cyan]r[/] [grey]Rename[/] | [cyan]d[/] [grey]Delete[/] | [cyan]q[/] [grey]Quit[/]";
+                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]to move[/] | [cyan]Enter[/] [grey]to open[/] | [cyan]q[/] [grey]to quit[/] | [cyan]?[/] [grey]for help[/]";
             }
         }
     }

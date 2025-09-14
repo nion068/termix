@@ -10,9 +10,12 @@ public class FileManagerRenderer(IconProvider iconProvider)
     public Layout GetLayout(FileManager fm, IRenderable footerRenderable)
     {
         var header = CreateHeader(fm.State.CurrentPath);
-        var body = fm.State.CurrentMode == InputMode.SortMenu
-            ? CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex)
-            : CreateBody(fm.State, fm.State.CurrentPreview);
+        IRenderable body = fm.State.CurrentMode switch
+        {
+            InputMode.SortMenu => CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex),
+            InputMode.HelpScreen => CreateHelpScreen(fm.State),
+            _ => CreateFileBrowserBody(fm.State, fm.State.CurrentPreview)
+        };
 
         var footer = new Panel(Align.Center(footerRenderable)) { Border = BoxBorder.None };
         return new Layout("Root")
@@ -51,7 +54,7 @@ public class FileManagerRenderer(IconProvider iconProvider)
         return new Panel(headerContent) { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Cyan1) };
     }
 
-    private Layout CreateBody(FileManagerState state, IRenderable previewContent)
+    private Layout CreateFileBrowserBody(FileManagerState state, IRenderable previewContent)
     {
         var fileTable = CreateFileTable(state);
         return new Layout("Body").SplitColumns(
@@ -80,11 +83,12 @@ public class FileManagerRenderer(IconProvider iconProvider)
             var isVisuallySelected = state.VisuallySelectedItems.Contains(item.Path);
 
             var style = isHighlighted ? new Style(background: Color.DodgerBlue1)
-                        : isVisuallySelected ? new Style(background: Color.Grey30)
-                        : Style.Plain;
+                : isVisuallySelected ? new Style(background: Color.Grey30)
+                : Style.Plain;
 
             var name = CreateNameMarkup(item, isVisuallySelected);
-            var scrollChar = GetScrollbarChar(i, state.CurrentItems.Count, pageSize, state.ViewOffset, visibleItems.Count);
+            var scrollChar = GetScrollbarChar(i, state.CurrentItems.Count, pageSize, state.ViewOffset,
+                visibleItems.Count);
 
             table.AddRow(
                 new Markup(name, style),
@@ -127,5 +131,46 @@ public class FileManagerRenderer(IconProvider iconProvider)
         AnsiConsole.MarkupLine($"[bold red]Error:[/] [red]{message.EscapeMarkup()}[/]");
         AnsiConsole.MarkupLine("[grey]Press any key to continue...[/]");
         Console.ReadKey(true);
+    }
+
+    private static IRenderable CreateHelpScreen(FileManagerState state)
+    {
+        var pageSize = Console.WindowHeight - 12;
+        pageSize = Math.Max(5, pageSize);
+
+        var totalItems = HelpProvider.Keybindings.Count;
+        var maxOffset = Math.Max(0, totalItems - pageSize);
+
+        var title = "[bold yellow]Keybindings[/]";
+        if (state.HelpVerticalOffset > 0) title += " [grey]⬆[/]";
+        if (state.HelpVerticalOffset < maxOffset) title += " [grey]⬇[/]";
+
+        var table = new Table()
+            .Title(title)
+            .Border(TableBorder.Rounded)
+            .BorderStyle("yellow")
+            .Expand();
+
+        table.AddColumn("[u]Key(s)[/]");
+        table.AddColumn("[u]Action[/]");
+        table.AddColumn("[u]Mode[/]");
+
+        var visibleItems = HelpProvider.Keybindings
+            .Skip(state.HelpVerticalOffset)
+            .Take(pageSize);
+
+        foreach (var (keys, action, mode) in visibleItems)
+        {
+            if (keys.StartsWith("--") && keys.EndsWith("--"))
+            {
+                table.AddRow(new Markup($"[bold]{keys.Replace("--", "").Trim()}[/]", "yellow")).Centered();
+            }
+            else
+            {
+                table.AddRow(keys, action, mode);
+            }
+        }
+
+        return new Align(table, HorizontalAlignment.Center, VerticalAlignment.Middle);
     }
 }

@@ -8,6 +8,11 @@ namespace termix.Handlers
     {
         private readonly FileManagerState _state = fileManager.State;
 
+        public void ShowHelpScreen()
+        {
+            _state.CurrentMode = InputMode.HelpScreen;
+            fileManager.SetNeedsRedraw();
+        }
         public void BeginPaste()
         {
             if (_state.Clipboard == null)

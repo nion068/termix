@@ -206,13 +206,13 @@ namespace termix
             }
             else if (State.Clipboard != null)
             {
-                var mode = State.Clipboard.Mode == ClipboardMode.Copy ? "Copy" : "Move";
+                var mode = State.Clipboard.Mode == ClipboardMode.Copy ? "Yank" : "Move";
                 var items = State.Clipboard.Items.Count == 1
                     ? State.Clipboard.Items[0].Name.EscapeMarkup()
                     : $"{State.Clipboard.Items.Count} items";
 
                 content = new Markup(
-                    $"[grey]Clipboard ({mode}):[/] [yellow]{items}[/] | [cyan]P[/] Paste, [cyan]Esc[/] Clear");
+                    $"[grey]Clipboard ({mode}):[/] [yellow]{items}[/] | [cyan]p[/] Paste, [cyan]Esc[/] Clear");
             }
             else
             {
@@ -230,7 +230,7 @@ namespace termix
                     return State.PromptText; 
                 case InputMode.Visual:
                     return
-                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]A[/] [grey]All[/] | [cyan]I[/] [grey]Invert[/] | [cyan]C[/] [grey]Copy[/] | [cyan]X[/] [grey]Move[/] | [cyan]D[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
+                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]a[/] [grey]All[/] | [cyan]i[/] [grey]Invert[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
                 case InputMode.SortMenu:
                     return
                         "[grey]Use[/] [cyan]↓↑/JK[/] [grey]to select[/] | [cyan]Enter[/] [grey]Apply[/] | [cyan]Esc[/] [grey]Cancel[/]";
@@ -250,8 +250,8 @@ namespace termix
                     return State.PromptText;
                 default:
                     return
-                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]V[/] [grey]Visual[/] | [cyan]T[/] [grey]Sort[/] | [cyan]C[/] [grey]Copy[/] | [cyan]X[/] [grey]Move[/] | [cyan]P[/] [grey]Paste[/] | " +
-                        "[cyan]S[/] [grey]Search[/] | [cyan]A[/] [grey]Add[/] | [cyan]R[/] [grey]Rename[/] | [cyan]D[/] [grey]Delete[/] | [cyan]Q[/] [grey]Quit[/]";
+                        "[grey]Use[/] [cyan]↓↑/JK[/] [grey]Move[/] | [cyan]H/L[/] [grey]Up/Open[/] | [cyan]v[/] [grey]Visual[/] | [cyan]t[/] [grey]Sort[/] | [cyan]y[/] [grey]Yank[/] | [cyan]Y[/] [grey]Yank Path[/] | [cyan]x[/] [grey]Move[/] | [cyan]p[/] [grey]Paste[/] | " +
+                        "[cyan]s[/] [grey]Search[/] | [cyan]a[/] [grey]Add[/] | [cyan]r[/] [grey]Rename[/] | [cyan]d[/] [grey]Delete[/] | [cyan]q[/] [grey]Quit[/]";
             }
         }
     }

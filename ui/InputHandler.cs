@@ -17,6 +17,7 @@ public class InputHandler(FileManager fileManager)
         {
             _keyBuffer = "";
         }
+
         _lastKeyTime = DateTime.Now;
 
         if (_state.CurrentMode == InputMode.Normal && keyInfo.Key == ConsoleKey.Escape && _state.Clipboard != null)
@@ -36,7 +37,7 @@ public class InputHandler(FileManager fileManager)
             case InputMode.Visual:
                 HandleVisualModeKeyPress(keyInfo);
                 break;
-             case InputMode.PasteConflict:
+            case InputMode.PasteConflict:
                 HandlePasteConflictInput(keyInfo);
                 break;
             default:
@@ -79,7 +80,7 @@ public class InputHandler(FileManager fileManager)
                 foreach (var path in allItems) _state.VisuallySelectedItems.Add(path);
                 fileManager.SetNeedsRedraw();
                 break;
-            case ConsoleKey.C:
+            case ConsoleKey.Y:
                 fileManager.ActionHandler.BeginCopy();
                 break;
             case ConsoleKey.X:
@@ -106,8 +107,10 @@ public class InputHandler(FileManager fileManager)
         {
             _state.VisuallySelectedItems.Add(item.Path);
         }
+
         fileManager.SetNeedsRedraw();
     }
+
     private void HandlePasteConflictInput(ConsoleKeyInfo keyInfo)
     {
         switch (keyInfo.Key)
@@ -135,6 +138,15 @@ public class InputHandler(FileManager fileManager)
         var key = keyInfo.Key;
 
         if (HandleMultiKeySequence(keyInfo)) return;
+        switch (keyInfo.KeyChar)
+        {
+            case 'y':
+                fileManager.ActionHandler.BeginCopy();
+                return;
+            case 'Y':
+                fileManager.ActionHandler.YankDirectoryPath();
+                return;
+        }
 
         switch (key)
         {
@@ -168,7 +180,6 @@ public class InputHandler(FileManager fileManager)
             case ConsoleKey.D: fileManager.ActionHandler.BeginDelete(); break;
             case ConsoleKey.S: fileManager.FilterHandler.BeginFilter(); break;
             case ConsoleKey.T: fileManager.ActionHandler.BeginSortMenu(); break;
-            case ConsoleKey.C: fileManager.ActionHandler.BeginCopy(); break;
             case ConsoleKey.X: fileManager.ActionHandler.BeginMove(); break;
             case ConsoleKey.P: fileManager.ActionHandler.BeginPaste(); break;
         }
@@ -296,6 +307,7 @@ public class InputHandler(FileManager fileManager)
                     _state.InputText += keyInfo.KeyChar;
                     fileManager.SetNeedsRedraw();
                 }
+
                 break;
         }
     }

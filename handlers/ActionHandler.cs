@@ -344,6 +344,18 @@ namespace termix.Handlers
             fileManager.RefreshDirectory(setInitialSelection: true);
         }
 
+        public void YankDirectoryPath()
+        {
+            if (_state.SelectedIndex < 0 || _state.SelectedIndex >= _state.CurrentItems.Count) return;
+
+            var selectedItem = _state.CurrentItems[_state.SelectedIndex];
+            var pathToYank = selectedItem.Path;
+
+            var response = ClipboardService.SetText(pathToYank);
+            _state.StatusMessage = response.Message;
+            fileManager.SetNeedsRedraw();
+        }
+
         private List<FileSystemItem> GetSelectedItems()
         {
             var selectedItems = new List<FileSystemItem>();

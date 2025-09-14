@@ -94,7 +94,8 @@ namespace termix.Handlers
         {
             if (items.Count == 0)
             {
-                _state.StatusMessage = $"[green]Successfully processed {total} items.[/]";
+                _state.StatusMessage = $"[green]Successfully processed {total} item(s).[/]";
+                _state.Clipboard = null; 
                 fileManager.RefreshDirectory();
                 return;
             }

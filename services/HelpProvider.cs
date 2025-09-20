@@ -26,6 +26,8 @@ public static class HelpProvider
         ("[cyan]s[/]", "Search/filter current directory", "Normal"),
         ("[cyan]Esc[/]", "Clear filter, cancel input, or clear clipboard", "All"),
         ("[cyan]v[/]", "Enter/exit Visual mode for multi-select", "Normal"),
+        ("[cyan]a[/]", "Select all items", "Visual"),
+        ("[cyan]i[/]", "Invert selection", "Visual"),
         ("[cyan]t[/]", "Open the sort menu", "Normal"),
         ("[cyan]b[/]", "Go back to search results from browsed directory", "Filtered Nav"),
         ("[cyan]q[/]", "Quit the application", "All"),

@@ -167,7 +167,7 @@ namespace termix
             {
                 State.UnfilteredItems = FileSystemService.GetDirectoryContents(State.CurrentPath, State.SortBy,
                     State.SortDirection, State.GroupDirectories);
-                if (State.CurrentMode != InputMode.Filter) State.CurrentItems = [..State.UnfilteredItems];
+                if (State.CurrentMode != InputMode.Filter) State.CurrentItems = [.. State.UnfilteredItems];
             }
             catch (Exception ex)
             {
@@ -197,7 +197,7 @@ namespace termix
             if (State.StatusMessage != null)
             {
                 return new Panel(new Markup(State.StatusMessage))
-                    { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Fuchsia) };
+                { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Fuchsia) };
             }
 
             var content = new Markup(GetFooterText());
@@ -216,7 +216,7 @@ namespace termix
                     return State.PromptText;
                 case InputMode.Visual:
                     return
-                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
+                        $"[bold yellow]-- VISUAL --[/] [grey]Selected:[/][yellow] {State.VisuallySelectedItems.Count} [/] | [cyan]a[/] [grey]Select All[/] |  [cyan]i[/] [grey]Inverse Selection[/] | [cyan]Space[/] [grey]Toggle[/] | [cyan]y[/] [grey]Yank[/] | [cyan]x[/] [grey]Move[/] | [cyan]d[/] [grey]Del[/] | [cyan]Esc[/] [grey]Cancel[/]";
                 case InputMode.SortMenu:
                     return
                         "[grey]Use[/] [cyan]↓↑/JK[/] [grey]to select[/] | [cyan]Enter[/] [grey]Apply[/] | [cyan]Esc[/] [grey]Cancel[/]";

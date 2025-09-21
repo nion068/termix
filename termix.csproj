@@ -9,7 +9,7 @@
         <ToolCommandName>termix</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
         <PackageId>Termix</PackageId>
-        <Version>2.2.0</Version>
+        <Version>2.3.0</Version>
         <Authors>amrohan</Authors>
         <Company>amrohan</Company>
         <Description>An elegant and powerful file navigator that makes command-line file management
@@ -33,7 +33,7 @@
         <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="docs\" />
+        <Folder Include="docs\" />
     </ItemGroup>
 
 </Project>

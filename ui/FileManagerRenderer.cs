@@ -49,8 +49,16 @@ public class FileManagerRenderer(IconProvider iconProvider)
 
     private static Panel CreateHeader(string currentPath)
     {
+        var branchName = GitService.GetBranchName(currentPath);
+        var branchInfo = "";
+        if (!string.IsNullOrEmpty(branchName))
+        {
+            const string branchIcon = "\uE725";
+            branchInfo = $" ([yellow]{branchIcon} {branchName.EscapeMarkup()}[/])";
+        }
+
         var displayPath = currentPath.Length > 80 ? "..." + currentPath[^77..] : currentPath;
-        var headerContent = new Markup($"[bold cyan3]\uE5FF {displayPath.EscapeMarkup()}[/]");
+        var headerContent = new Markup($"[bold cyan3]\uE5FF {displayPath.EscapeMarkup()}[/]{branchInfo}");
         return new Panel(headerContent) { Border = BoxBorder.Rounded, BorderStyle = new Style(Color.Cyan1) };
     }
 

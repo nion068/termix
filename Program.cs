@@ -12,14 +12,17 @@ public static class Program
             AnsiConsole.Clear();
             var fileManager = new FileManager(useIcons);
             fileManager.Run();
+
+            AnsiConsole.Clear();
         }
         catch (Exception ex)
         {
-            AnsiConsole.WriteException(ex, ExceptionFormats.ShortenEverything | ExceptionFormats.ShowLinks);
-        }
-        finally
-        {
-            AnsiConsole.Clear();
+            AnsiConsole.MarkupLine($"{ex.GetType().Name}: [red]{ex.Message}[/]");
+
+            if (!string.IsNullOrEmpty(ex.StackTrace))
+            {
+                AnsiConsole.WriteLine(ex.StackTrace);
+            }
         }
 
         return Task.CompletedTask;

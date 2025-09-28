@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace termix.Helpers;
 
 public static class FileTypeHelper
@@ -14,8 +16,18 @@ public static class FileTypeHelper
         return ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
     }
 
-    public static bool IsBinary(byte[] fileBytes)
+    public static bool IsBinary(Stream fileStream)
     {
-        return fileBytes.Take(8000).Any(b => b == 0);
+        if (fileStream.CanSeek)
+        {
+            fileStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        const int sampleSize = 8196; // 8KB
+        var buffer = ArrayPool<byte>.Shared.Rent(sampleSize);
+        var bytesRead = fileStream.Read(buffer, 0, sampleSize);
+        var span = buffer.AsSpan(0, bytesRead);
+
+        return span.Contains((byte)0);
     }
 }

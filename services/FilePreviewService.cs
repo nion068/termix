@@ -46,8 +46,8 @@ public class FilePreviewService(IconProvider iconProvider)
                 return RenderImagePreview(filePath, header);
             }
 
-            var fileBytes = File.ReadAllBytes(filePath);
-            if (FileTypeHelper.IsBinary(fileBytes))
+            using var fileStream = File.OpenRead(filePath);
+            if (FileTypeHelper.IsBinary(fileStream))
                 return new Panel(Align.Center(new Text("Binary File\nNo preview available"), VerticalAlignment.Middle))
                     .Header(header).Expand().Border(BoxBorder.Rounded);
 

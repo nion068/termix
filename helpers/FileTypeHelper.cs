@@ -1,19 +1,24 @@
 using System.Buffers;
+using System.Collections.Frozen;
 
 namespace termix.Helpers;
 
 public static class FileTypeHelper
 {
-    private static readonly string[] ArchiveExtensions = [".zip", ".rar", ".tar", ".gz", ".7z"];
-    private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp",  ".tif", ".tiff"];
+    private static readonly FrozenSet<string> ArchiveExtensions = FrozenSet.ToFrozenSet(
+        [".zip", ".rar", ".tar", ".gz", ".7z"],
+        StringComparer.OrdinalIgnoreCase);
+    private static readonly FrozenSet<string> ImageExtensions = FrozenSet.ToFrozenSet(
+        [".jpg", ".jpeg", ".png", ".gif", ".bmp",  ".tif", ".tiff"],
+        StringComparer.OrdinalIgnoreCase);
 
     public static bool IsArchiveFile(string extension)
     {
-        return ArchiveExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        return ArchiveExtensions.Contains(extension);
     }
     public static bool IsImageFile(string extension)
     {
-        return ImageExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        return ImageExtensions.Contains(extension);
     }
 
     public static bool IsBinary(Stream fileStream)

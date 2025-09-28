@@ -5,7 +5,7 @@ namespace termix.Helpers;
 public static class FileTypeHelper
 {
     private static readonly string[] ArchiveExtensions = [".zip", ".rar", ".tar", ".gz", ".7z"];
-    private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp"];
+    private static readonly string[] ImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp",  ".tif", ".tiff"];
 
     public static bool IsArchiveFile(string extension)
     {

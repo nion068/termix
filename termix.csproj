@@ -5,6 +5,8 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <IsAotCompatible>true</IsAotCompatible>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>termix</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>

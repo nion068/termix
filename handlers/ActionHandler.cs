@@ -4,7 +4,7 @@ using termix.Services;
 
 namespace termix.Handlers
 {
-    public class ActionHandler(FileManager fileManager)
+    public class ActionHandler(FileManager fileManager, BookmarkService bookmarkService)
     {
         private readonly FileManagerState _state = fileManager.State;
 
@@ -95,7 +95,7 @@ namespace termix.Handlers
             if (items.Count == 0)
             {
                 _state.StatusMessage = $"[green]Successfully processed {total} item(s).[/]";
-                _state.Clipboard = null; 
+                _state.Clipboard = null;
                 fileManager.RefreshDirectory();
                 return;
             }
@@ -350,6 +350,22 @@ namespace termix.Handlers
 
         public void CommitStandardTextInput()
         {
+            switch (_state.CurrentMode)
+            {
+                case InputMode.Add or InputMode.Rename:
+                    CommitFileAction();
+                    break;
+                case InputMode.AddBookmark:
+                    AddBookmark(_state.InputText);
+                    break;
+                case InputMode.RenameBookmark:
+                    RenameBookmark(_state.InputText);
+                    break;
+            }
+        }
+
+        private void CommitFileAction()
+        {
             var item = _state.CurrentItems.Count > _state.SelectedIndex && _state.SelectedIndex >= 0
                 ? _state.CurrentItems[_state.SelectedIndex]
                 : null;
@@ -427,5 +443,193 @@ namespace termix.Handlers
 
             return selectedItems;
         }
+
+
+        #region Bookmark 
+        public void OpenBookmarkMenu()
+        {
+            _state.Bookmarks = bookmarkService.LoadBookmarks().OrderBy(b => b.Name).ToList();
+            _state.FilteredBookmarks = new List<Bookmark>(_state.Bookmarks);
+            _state.CurrentMode = InputMode.BookmarkMenu;
+            _state.BookmarkMenuSelectedIndex = 0;
+            _state.InputText = "";
+            fileManager.SetNeedsRedraw();
+        }
+
+        public void CloseBookmarkMenu()
+        {
+            fileManager.ResetToNormalMode();
+        }
+
+        public void BeginFilterBookmarks()
+        {
+            _state.CurrentMode = InputMode.BookmarkFilter;
+            _state.PromptText = "Filter Bookmarks: ";
+            _state.InputText = "";
+            FilterBookmarks("");
+            fileManager.SetNeedsRedraw();
+        }
+        public void NavigateToSelectedBookmark()
+        {
+            if (_state.BookmarkMenuSelectedIndex < 0 || _state.BookmarkMenuSelectedIndex >= _state.FilteredBookmarks.Count) return;
+
+            var bookmark = _state.FilteredBookmarks[_state.BookmarkMenuSelectedIndex];
+            fileManager.ResetToNormalMode();
+            _state.CurrentPath = bookmark.Path;
+            fileManager.RefreshDirectory(setInitialSelection: true);
+        }
+        public void BeginAddBookmark()
+        {
+            _state.CurrentMode = InputMode.AddBookmark;
+            _state.PromptText = "Bookmark name: ";
+            _state.InputText = "";
+            fileManager.SetNeedsRedraw();
+        }
+        private void AddBookmark(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                _state.StatusMessage = "[red]Bookmark name cannot be empty.[/]";
+                _state.CurrentMode = InputMode.Normal;
+                fileManager.SetNeedsRedraw();
+                return;
+            }
+
+            var bookmarks = bookmarkService.LoadBookmarks();
+            if (bookmarks.Any(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+            {
+                _state.StatusMessage = $"[red]Bookmark '{name.EscapeMarkup()}' already exists.[/]";
+                _state.CurrentMode = InputMode.Normal;
+                fileManager.SetNeedsRedraw();
+                return;
+            }
+
+            string pathToBookmark = _state.CurrentPath;
+
+            var selectedItem = _state.SelectedIndex >= 0 && _state.SelectedIndex < _state.CurrentItems.Count
+                ? _state.CurrentItems[_state.SelectedIndex]
+                : null;
+
+            if (selectedItem is { IsDirectory: true })
+            {
+                pathToBookmark = selectedItem.Path;
+            }
+            bookmarks.Add(new Bookmark(name, pathToBookmark));
+            bookmarkService.SaveBookmarks(bookmarks);
+
+            var bookmarkedItemName = Path.GetFileName(pathToBookmark.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(bookmarkedItemName)) bookmarkedItemName = pathToBookmark;
+
+            _state.StatusMessage = $"[green]Bookmark '{name.EscapeMarkup()}' added for '[yellow]{bookmarkedItemName.EscapeMarkup()}[/]'[/]";
+            fileManager.ResetToNormalMode();
+        }
+        public void BeginRenameBookmark()
+        {
+            if (_state.BookmarkMenuSelectedIndex < 0 || _state.BookmarkMenuSelectedIndex >= _state.FilteredBookmarks.Count) return;
+            var bookmark = _state.FilteredBookmarks[_state.BookmarkMenuSelectedIndex];
+
+            _state.CurrentMode = InputMode.RenameBookmark;
+            _state.PromptText = "New name: ";
+            _state.InputText = bookmark.Name;
+            fileManager.SetNeedsRedraw();
+        }
+
+        private void RenameBookmark(string newName)
+        {
+            if (_state.BookmarkMenuSelectedIndex < 0 || _state.BookmarkMenuSelectedIndex >= _state.FilteredBookmarks.Count) return;
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                _state.StatusMessage = "[red]Bookmark name cannot be empty.[/]";
+                return;
+            }
+
+            var originalBookmark = _state.FilteredBookmarks[_state.BookmarkMenuSelectedIndex];
+            var bookmarks = bookmarkService.LoadBookmarks();
+            var bookmarkToUpdate = bookmarks.FirstOrDefault(b => b.Name.Equals(originalBookmark.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (bookmarkToUpdate != null)
+            {
+                bookmarks.Remove(bookmarkToUpdate);
+                bookmarks.Add(bookmarkToUpdate with { Name = newName });
+                bookmarkService.SaveBookmarks(bookmarks);
+                _state.StatusMessage = $"[green]Bookmark renamed to '{newName.EscapeMarkup()}'[/]";
+            }
+
+            OpenBookmarkMenu();
+        }
+
+        public void BeginDeleteBookmark()
+        {
+            List<Bookmark> bookmarksToDelete = [];
+            if (_state.CurrentMode == InputMode.BookmarkVisual && _state.VisuallySelectedBookmarks.Any())
+            {
+                var selectedNames = _state.VisuallySelectedBookmarks.ToHashSet();
+                bookmarksToDelete.AddRange(_state.FilteredBookmarks.Where(b => selectedNames.Contains(b.Name)));
+            }
+            else if (_state.BookmarkMenuSelectedIndex >= 0 && _state.BookmarkMenuSelectedIndex < _state.FilteredBookmarks.Count)
+            {
+                bookmarksToDelete.Add(_state.FilteredBookmarks[_state.BookmarkMenuSelectedIndex]);
+            }
+
+            if (bookmarksToDelete.Count == 0) return;
+
+            _state.PendingDeleteBookmarks = bookmarksToDelete;
+            _state.CurrentMode = InputMode.BookmarkDeleteConfirm;
+            var prompt = bookmarksToDelete.Count == 1
+                ? $"Delete bookmark '{bookmarksToDelete[0].Name.EscapeMarkup()}'?"
+                : $"Delete {bookmarksToDelete.Count} bookmarks?";
+
+            _state.PromptText = $"{prompt} [bold green]y[/]/[bold red]n[/]";
+            fileManager.SetNeedsRedraw();
+        }
+
+        public void CommitDeleteBookmark()
+        {
+            var bookmarks = bookmarkService.LoadBookmarks();
+            var namesToDelete = _state.PendingDeleteBookmarks.Select(b => b.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            bookmarks.RemoveAll(b => namesToDelete.Contains(b.Name));
+            bookmarkService.SaveBookmarks(bookmarks);
+
+            _state.StatusMessage = $"[green]Deleted {_state.PendingDeleteBookmarks.Count} bookmark(s).[/]";
+            _state.PendingDeleteBookmarks.Clear();
+
+            OpenBookmarkMenu();
+        }
+
+        public void FilterBookmarks(string filter)
+        {
+            _state.InputText = filter;
+            if (string.IsNullOrEmpty(filter))
+            {
+                _state.FilteredBookmarks = new List<Bookmark>(_state.Bookmarks);
+            }
+            else
+            {
+                _state.FilteredBookmarks = _state.Bookmarks
+                    .Where(b => b.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                b.Path.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            _state.BookmarkMenuSelectedIndex = _state.FilteredBookmarks.Count > 0 ? 0 : -1;
+            fileManager.SetNeedsRedraw();
+        }
+
+        public void ToggleBookmarkVisualSelection()
+        {
+            if (_state.BookmarkMenuSelectedIndex < 0 || _state.BookmarkMenuSelectedIndex >= _state.FilteredBookmarks.Count) return;
+
+            var item = _state.FilteredBookmarks[_state.BookmarkMenuSelectedIndex];
+
+            if (!_state.VisuallySelectedBookmarks.Add(item.Name))
+            {
+                _state.VisuallySelectedBookmarks.Remove(item.Name);
+            }
+
+            fileManager.SetNeedsRedraw();
+        }
+
+        #endregion
     }
 }

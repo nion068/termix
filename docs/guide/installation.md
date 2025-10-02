@@ -90,8 +90,6 @@ dotnet pack
 dotnet tool install --global --add-source ./nupkg termix
 ```
 
----
-
 ## Font Setup (Recommended)
 
 For icons, install a [Nerd Font](https://www.nerdfonts.com/):
@@ -148,7 +146,7 @@ dotnet tool install --global termix
 ```
 
 ::: info Version Info
-**Current stable version:** 2.3.0
+**Current stable version:** 2.4.0
 
 **Minimum .NET:** 9.0
 

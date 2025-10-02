@@ -13,5 +13,11 @@ public enum InputMode
     Visual,
     PasteConflict,
     CreateDirConfirm,
-    HelpScreen
+    HelpScreen,
+    BookmarkMenu,
+    BookmarkFilter, 
+    BookmarkVisual,
+    AddBookmark,
+    RenameBookmark,
+    BookmarkDeleteConfirm
 }

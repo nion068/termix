@@ -17,6 +17,14 @@ public class NavigationHandler(FileManager fileManager)
         fileManager.AdjustViewPort();
         fileManager.UpdatePreview();
     }
+    public void MoveBookmarkSelection(int direction)
+    {
+        if (_state.FilteredBookmarks.Count == 0) return;
+        var newIndex = Math.Clamp(_state.BookmarkMenuSelectedIndex + direction, 0, _state.FilteredBookmarks.Count - 1);
+        if (newIndex == _state.BookmarkMenuSelectedIndex) return;
+        _state.BookmarkMenuSelectedIndex = newIndex;
+        fileManager.SetNeedsRedraw();
+    }
 
     public void MoveSelectionToEdge(bool toStart)
     {
@@ -35,7 +43,7 @@ public class NavigationHandler(FileManager fileManager)
             if (!string.IsNullOrEmpty(_state.InputText) &&
                 _state.CurrentMode != InputMode.FilteredNavigation)
             {
-                _state.SavedFilterState = (_state.CurrentPath, _state.InputText, [.._state.CurrentItems],
+                _state.SavedFilterState = (_state.CurrentPath, _state.InputText, [.. _state.CurrentItems],
                     _state.SelectedIndex);
                 _state.CurrentMode = InputMode.FilteredNavigation;
                 fileManager.SetNeedsRedraw();
@@ -46,7 +54,7 @@ public class NavigationHandler(FileManager fileManager)
         }
         else
         {
-            Services.FileSystemService.OpenFile(selectedItem.Path);
+            FileSystemService.OpenFile(selectedItem.Path);
         }
     }
 

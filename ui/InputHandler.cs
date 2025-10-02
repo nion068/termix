@@ -37,6 +37,15 @@ public class InputHandler(FileManager fileManager)
             case InputMode.Visual:
                 HandleVisualModeKeyPress(keyInfo);
                 break;
+            case InputMode.BookmarkMenu:
+                HandleBookmarkMenuInput(keyInfo);
+                break;
+            case InputMode.BookmarkFilter:
+                HandleBookmarkFilterInput(keyInfo);
+                break;
+            case InputMode.BookmarkVisual:
+                HandleBookmarkVisualModeInput(keyInfo);
+                break;
             case InputMode.PasteConflict:
                 HandlePasteConflictInput(keyInfo);
                 break;
@@ -118,6 +127,33 @@ public class InputHandler(FileManager fileManager)
         fileManager.SetNeedsRedraw();
     }
 
+    private void HandleBookmarkVisualModeInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.Escape:
+            case ConsoleKey.V:
+                _state.CurrentMode = InputMode.BookmarkMenu;
+                _state.VisuallySelectedBookmarks.Clear();
+                fileManager.SetNeedsRedraw();
+                break;
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J:
+                fileManager.NavigationHandler.MoveBookmarkSelection(1);
+                break;
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K:
+                fileManager.NavigationHandler.MoveBookmarkSelection(-1);
+                break;
+            case ConsoleKey.Spacebar:
+                fileManager.ActionHandler.ToggleBookmarkVisualSelection();
+                break;
+            case ConsoleKey.D:
+                fileManager.ActionHandler.BeginDeleteBookmark();
+                break;
+        }
+    }
+
     private void HandlePasteConflictInput(ConsoleKeyInfo keyInfo)
     {
         switch (keyInfo.Key)
@@ -156,6 +192,12 @@ public class InputHandler(FileManager fileManager)
             case '?':
                 fileManager.ActionHandler.ShowHelpScreen();
                 return;
+            case 'm':
+                fileManager.ActionHandler.BeginAddBookmark();
+                return;
+            case 'b':
+                fileManager.ActionHandler.OpenBookmarkMenu();
+                return;
         }
 
         switch (key)
@@ -192,6 +234,67 @@ public class InputHandler(FileManager fileManager)
             case ConsoleKey.T: fileManager.ActionHandler.BeginSortMenu(); break;
             case ConsoleKey.X: fileManager.ActionHandler.BeginMove(); break;
             case ConsoleKey.P: fileManager.ActionHandler.BeginPaste(); break;
+        }
+    }
+
+    private void HandleBookmarkMenuInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.DownArrow:
+            case ConsoleKey.J:
+                fileManager.NavigationHandler.MoveBookmarkSelection(1);
+                break;
+            case ConsoleKey.UpArrow:
+            case ConsoleKey.K:
+                fileManager.NavigationHandler.MoveBookmarkSelection(-1);
+                break;
+
+            case ConsoleKey.Enter:
+                fileManager.ActionHandler.NavigateToSelectedBookmark();
+                break;
+            case ConsoleKey.S:
+                fileManager.ActionHandler.BeginFilterBookmarks();
+                break;
+            case ConsoleKey.R:
+                fileManager.ActionHandler.BeginRenameBookmark();
+                break;
+            case ConsoleKey.D:
+                fileManager.ActionHandler.BeginDeleteBookmark();
+                break;
+            case ConsoleKey.V:
+                _state.CurrentMode = InputMode.BookmarkVisual;
+                _state.VisuallySelectedBookmarks.Clear();
+                fileManager.ActionHandler.ToggleBookmarkVisualSelection();
+                break;
+
+            case ConsoleKey.Escape:
+                fileManager.ActionHandler.CloseBookmarkMenu();
+                break;
+        }
+    }
+
+    private void HandleBookmarkFilterInput(ConsoleKeyInfo keyInfo)
+    {
+        switch (keyInfo.Key)
+        {
+            case ConsoleKey.Enter:
+            case ConsoleKey.Escape:
+                _state.CurrentMode = InputMode.BookmarkMenu;
+                _state.PromptText = "";
+                fileManager.SetNeedsRedraw();
+                break;
+            case ConsoleKey.Backspace when _state.InputText.Length > 0:
+                _state.InputText = _state.InputText[..^1];
+                fileManager.ActionHandler.FilterBookmarks(_state.InputText);
+                break;
+            default:
+                if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    _state.InputText += keyInfo.KeyChar;
+                    fileManager.ActionHandler.FilterBookmarks(_state.InputText);
+                }
+                break;
         }
     }
 
@@ -235,14 +338,30 @@ public class InputHandler(FileManager fileManager)
             case InputMode.Filter:
                 HandleFilterInput(keyInfo);
                 break;
-            case InputMode.Add or InputMode.Rename:
+            case InputMode.Add or InputMode.Rename or InputMode.AddBookmark or InputMode.RenameBookmark:
                 HandleStandardTextInput(keyInfo);
                 break;
             case InputMode.DeleteConfirm:
                 HandleDeleteConfirmation(keyInfo.Key);
                 break;
+            case InputMode.BookmarkDeleteConfirm:
+                HandleBookmarkDeleteConfirmation(keyInfo.Key);
+                break;
             case InputMode.QuitConfirm:
                 HandleQuitConfirmation(keyInfo.Key);
+                break;
+        }
+    }
+    private void HandleBookmarkDeleteConfirmation(ConsoleKey key)
+    {
+        switch (key)
+        {
+            case ConsoleKey.Y:
+                fileManager.ActionHandler.CommitDeleteBookmark();
+                break;
+            case ConsoleKey.N or ConsoleKey.Escape:
+                _state.CurrentMode = InputMode.BookmarkMenu;
+                fileManager.SetNeedsRedraw();
                 break;
         }
     }
@@ -315,7 +434,17 @@ public class InputHandler(FileManager fileManager)
         switch (keyInfo.Key)
         {
             case ConsoleKey.Enter: fileManager.ActionHandler.CommitStandardTextInput(); break;
-            case ConsoleKey.Escape: fileManager.ResetToNormalMode(); break;
+            case ConsoleKey.Escape:
+                if (_state.CurrentMode is InputMode.AddBookmark or InputMode.RenameBookmark)
+                {
+                    _state.CurrentMode = InputMode.BookmarkMenu;
+                    fileManager.SetNeedsRedraw();
+                }
+                else
+                {
+                    fileManager.ResetToNormalMode();
+                }
+                break;
             case ConsoleKey.Backspace when _state.InputText.Length > 0:
                 _state.InputText = _state.InputText[..^1];
                 fileManager.SetNeedsRedraw();

@@ -10,12 +10,23 @@ public class FileManagerRenderer(IconProvider iconProvider)
     public Layout GetLayout(FileManager fm, IRenderable footerRenderable)
     {
         var header = CreateHeader(fm.State.CurrentPath);
-        IRenderable body = fm.State.CurrentMode switch
+        IRenderable body;
+
+        switch (fm.State.CurrentMode)
         {
-            InputMode.SortMenu => CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex),
-            InputMode.HelpScreen => CreateHelpScreen(fm.State),
-            _ => CreateFileBrowserBody(fm.State, fm.State.CurrentPreview)
-        };
+            case InputMode.SortMenu:
+                body = CreateSortMenuBody(fm.SortOptions, fm.State.SortMenuSelectedIndex);
+                break;
+            case InputMode.HelpScreen:
+                body = CreateHelpScreen(fm.State);
+                break;
+            case InputMode.BookmarkMenu or InputMode.BookmarkFilter or InputMode.BookmarkVisual or InputMode.AddBookmark or InputMode.RenameBookmark or InputMode.BookmarkDeleteConfirm:
+                body = CreateBookmarkMenuBody(fm.State);
+                break;
+            default:
+                body = CreateFileBrowserBody(fm.State, fm.State.CurrentPreview);
+                break;
+        }
 
         var footer = new Panel(Align.Center(footerRenderable)) { Border = BoxBorder.None };
         return new Layout("Root")
@@ -45,6 +56,46 @@ public class FileManagerRenderer(IconProvider iconProvider)
         }
 
         return new Align(table, HorizontalAlignment.Center, VerticalAlignment.Middle);
+    }
+
+    private static IRenderable CreateBookmarkMenuBody(FileManagerState state)
+    {
+        var title = "[bold]Bookmarks[/]";
+
+        var table = new Table()
+            .Title(title)
+            .Border(TableBorder.Rounded)
+            .BorderStyle("yellow")
+            .Expand();
+
+        table.AddColumn("Name", c => c.Width(1));
+        table.AddColumn("Path", c => c.Width(3));
+
+        if (state.FilteredBookmarks.Count == 0)
+        {
+            table.AddRow(new Markup("[grey]No bookmarks found...[/]"));
+        }
+        else
+        {
+            for (var i = 0; i < state.FilteredBookmarks.Count; i++)
+            {
+                var bookmark = state.FilteredBookmarks[i];
+                var isSelected = i == state.BookmarkMenuSelectedIndex;
+                var isVisuallySelected = state.VisuallySelectedBookmarks.Contains(bookmark.Name);
+
+                var style = isSelected ? new Style(background: Color.DodgerBlue1)
+                    : isVisuallySelected ? new Style(background: Color.Grey30)
+                    : Style.Plain;
+
+                var selectionMarker = isVisuallySelected ? "[yellow]*[/] " : "  ";
+
+                table.AddRow(
+                    new Markup(selectionMarker + bookmark.Name.EscapeMarkup(), style),
+                    new Markup(bookmark.Path.EscapeMarkup(), style));
+            }
+        }
+
+        return new Align(table, HorizontalAlignment.Center, VerticalAlignment.Top);
     }
 
     private static Panel CreateHeader(string currentPath)

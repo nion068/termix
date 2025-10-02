@@ -210,9 +210,9 @@ public class FileManagerRenderer(IconProvider iconProvider)
             .BorderStyle("yellow")
             .Expand();
 
-        table.AddColumn("[u]Key(s)[/]");
-        table.AddColumn("[u]Action[/]");
-        table.AddColumn("[u]Mode[/]");
+        table.AddColumn("[u]Key(s)[/]", c => c.Width(2));
+        table.AddColumn("[u]Action[/]", c => c.Width(3));
+        table.AddColumn("[u]Mode[/]", c => c.Width(2));
 
         var visibleItems = HelpProvider.Keybindings
             .Skip(state.HelpVerticalOffset)
